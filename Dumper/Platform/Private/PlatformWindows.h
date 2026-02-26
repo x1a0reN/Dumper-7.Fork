@@ -122,7 +122,8 @@ namespace PlatformWindows
 	uintptr_t GetModuleBase(const char* const ModuleName = Settings::General::DefaultModuleName);
 	uintptr_t GetOffset(const uintptr_t Address, const char* const ModuleName = Settings::General::DefaultModuleName);
 	uintptr_t GetOffset(const void* Address, const char* const ModuleName = Settings::General::DefaultModuleName);
-	
+	std::pair<std::string, uintptr_t> GetModuleAndOffset(const void* Address);
+
 	SectionInfo GetSectionInfo(const std::string& SectionName, const char* const ModuleName = Settings::General::DefaultModuleName);
 	void* IterateSectionWithCallback(const SectionInfo& Info, const std::function<bool(void* Address)>& Callback, uint32_t Granularity = 0x4, uint32_t OffsetFromEnd = 0x0);
 	void* IterateAllSectionsWithCallback(const std::function<bool(void* Address)>& Callback, uint32_t Granularity = 0x4, uint32_t OffsetFromEnd = 0x0, const char* const ModuleName = Settings::General::DefaultModuleName);

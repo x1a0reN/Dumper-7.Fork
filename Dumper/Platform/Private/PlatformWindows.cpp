@@ -403,6 +403,33 @@ uintptr_t PlatformWindows::GetOffset(const void* Address, const char* const Modu
 	return GetOffset(reinterpret_cast<const uintptr_t>(Address), ModuleName);
 }
 
+std::pair<std::string, uintptr_t> PlatformWindows::GetModuleAndOffset(const void* Address)
+{
+	if (Address == nullptr)
+		return { "", 0x0 };
+
+	HMODULE ModuleHandle = nullptr;
+	constexpr DWORD GetModuleHandleFlags = (GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT);
+
+	if (!GetModuleHandleExA(GetModuleHandleFlags, static_cast<LPCSTR>(Address), &ModuleHandle) || ModuleHandle == nullptr)
+		return { "", 0x0 };
+
+	const uintptr_t ModuleBase = reinterpret_cast<uintptr_t>(ModuleHandle);
+	const uintptr_t Offset = reinterpret_cast<uintptr_t>(Address) - ModuleBase;
+
+	char ModulePath[MAX_PATH] = {};
+	const DWORD ModulePathSize = GetModuleFileNameA(ModuleHandle, ModulePath, MAX_PATH);
+
+	if (ModulePathSize == 0x0 || ModulePathSize >= MAX_PATH)
+		return { "", Offset };
+
+	const std::string FullModulePath(ModulePath, ModulePathSize);
+	const size_t LastSlash = FullModulePath.find_last_of("\\/");
+	const std::string ModuleName = (LastSlash == std::string::npos) ? FullModulePath : FullModulePath.substr(LastSlash + 1);
+
+	return { ModuleName, Offset };
+}
+
 SectionInfo PlatformWindows::GetSectionInfo(const std::string& SectionName, const char* const ModuleName)
 {
 	const uintptr_t ModuleBase = GetModuleBase(ModuleName);

@@ -299,6 +299,21 @@ std::string CppGenerator::GenerateSingleFunction(const FunctionWrapper& Func, co
 
 	FunctionInfo FuncInfo = GenerateFunctionInfo(Func);
 
+	std::string FunctionOffsetComment;
+	if (!Func.IsPredefined())
+	{
+		const UEFunction UnrealFunctionForComment = Func.GetUnrealFunction();
+		void* const ExecFunctionAddress = UnrealFunctionForComment.GetExecFunction();
+
+		if (ExecFunctionAddress != nullptr)
+		{
+			const auto [ModuleName, ModuleOffset] = Platform::GetModuleAndOffset(ExecFunctionAddress);
+
+			if (!ModuleName.empty())
+				FunctionOffsetComment = std::format(" // {}+0x{:X}", ModuleName, ModuleOffset);
+		}
+	}
+
 	const bool bHasInlineBody = Func.HasInlineBody();
 	const std::string TemplateText = (bHasInlineBody && Func.HasCustomTemplateText() ? (Func.GetPredefFunctionCustomTemplateText() + "\n\t") : "");
 
@@ -306,7 +321,7 @@ std::string CppGenerator::GenerateSingleFunction(const FunctionWrapper& Func, co
 
 	// Function declaration and inline-body generation
 	InHeaderFunctionText += std::format("\t{}{}{}{}{}{}", TemplateText, (Func.IsStatic() ? "static " : ""), FuncInfo.RetType, (FuncInfo.RetType.empty() ? "" : " "), FuncInfo.FuncNameWithParams, bIsConstFunc ? " const" : "");
-	InHeaderFunctionText += (bHasInlineBody ? ("\n\t" + Func.GetPredefFunctionInlineBody()) : ";") + "\n";
+	InHeaderFunctionText += (bHasInlineBody ? ("\n\t" + Func.GetPredefFunctionInlineBody()) : (";" + FunctionOffsetComment)) + "\n";
 
 	if (bHasInlineBody)
 		return InHeaderFunctionText;
