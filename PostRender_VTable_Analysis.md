@@ -267,6 +267,25 @@ CALL    [RAX + DrawHUD_VIdx * 8]  ; 通过虚表调用 DrawHUD
 
 #### 实现代码（Shipping 构建）
 
+经逐版本源码核对，`PostRender(UCanvas* Canvas)` 在 12 个版本中的定位如下：
+
+| UE版本 | `GameViewportClient.h` 行号 | `GameViewportClient.cpp` 行号 |
+|---|---:|---:|
+| 4.21 | 431 | 1873 |
+| 4.24 | 446 | 1945 |
+| 4.25 | 458 | 1964 |
+| 4.26 | 462 | 2066 |
+| 4.27 | 462 | 2093 |
+| 5.0 | 473 | 2146 |
+| 5.1 | 477 | 2181 |
+| 5.2 | 481 | 2215 |
+| 5.3 | 483 | 2272 |
+| 5.4 | 484 | 2350 |
+| 5.6 | 480 | 2509 |
+| 5.7 | 480 | 2603 |
+
+声明顺序在所有版本中保持一致：`DrawTitleSafeArea(UCanvas*)` → `PostRender(UCanvas*)` → `DrawTransition(UCanvas*)` → `DrawTransitionMessage(UCanvas*, const FString&)`。
+
 在非编辑器构建（即所有发行游戏）中，`WITH_EDITOR` 为 false，函数体极其简短：
 
 ```cpp
@@ -332,7 +351,7 @@ PostRender 的情况不同：
 2. 函数体没有类似 TEST FunctionFlags 的"硬编码常量检查"
 3. 但有其他可利用的特征（见第四节）
 
-### 5.2 方案 A：AHUD::PostRender() — 虚表遍历 + 组合特征码（推荐）
+### 5.2 方案 A：AHUD::PostRender() — 虚表遍历 + 组合特征码
 
 #### 算法流程
 
@@ -411,7 +430,7 @@ auto IsHUDPostRender = [](const uint8_t* FuncAddress, int32_t Index) -> bool
 
 但此方法依赖字符串未被 strip，可靠性较低。
 
-### 5.3 方案 B：UGameViewportClient::PostRender() — DrawTransition 字符串回溯法
+### 5.3 方案 B：UGameViewportClient::PostRender() — DrawTransition 字符串回溯法（推荐）
 
 由于 UGameViewportClient::PostRender 函数体过短（Shipping 构建中仅调用 DrawTransition），无法直接做特征码匹配。采用间接定位策略：
 
@@ -463,14 +482,18 @@ if (DrawTransitionAddr)
 }
 ```
 
-**注意：** 此方案假设 PostRender 和 DrawTransition 在虚表中相邻。经源码验证，这在所有 12 个版本中均成立，但游戏开发者如果在子类中插入虚函数可能打破此假设。建议增加验证步骤。
+**注意：** 此方案假设 PostRender 和 DrawTransition 在虚表中相邻。经源码验证，这在所有 12 个版本中均成立，但游戏开发者如果在子类中插入虚函数可能打破此假设。建议增加以下二次校验步骤以降低误判率：
+
+1. **函数长度校验**：反推的 PostRender 槽位函数应明显短于 DrawTransition（Shipping 构建中 PostRender 仅含一个 CALL，而 DrawTransition 含 switch-case + 多个字符串引用）
+2. **调用链校验**：PostRender 函数体内应存在对 DrawTransition 的直接调用（CALL 目标地址应指向下一个虚表槽的函数）
+3. **失败降级**：任一关键校验失败则标记为"不可信"，走 INI 手动覆盖路径
 
 ### 5.4 检测策略总结
 
-| 目标函数 | 检测方法 | 可靠性 | 复杂度 |
-|---------|---------|--------|--------|
-| AHUD::PostRender() | 虚表遍历 + 双空指针检查 + CanEverRender 调用检测 | 高 | 中 |
-| UGameViewportClient::PostRender() | DrawTransition 字符串回溯 + 虚表相邻推算 | 中高 | 高 |
+| 目标函数 | 检测方法 | 可靠性 | 复杂度 | 定位 |
+|---------|---------|--------|--------|------|
+| AHUD::PostRender() | 虚表遍历 + 双空指针检查 + CanEverRender 调用检测 | 高 | 中 | 信息性 |
+| UGameViewportClient::PostRender() | DrawTransition 字符串回溯 + 虚表相邻推算 | 中高 | 高 | 主方案 |
 
 ---
 
@@ -898,8 +921,8 @@ void* OriginalPostRender = HUDVft[DetectedIndex];
 
 **优先级排序：**
 
-1. **P0（必须）**：实现 AHUD::PostRender 的自动检测 — 这是最常用的 Hook 目标
-2. **P1（推荐）**：实现 UGameViewportClient::PostRender 的间接检测
+1. **P0（必须）**：实现 UGameViewportClient::PostRender 的间接检测 — 这是最通用的绘制 Hook 点，每帧调用且自带 UCanvas* 参数，几乎所有 UE 游戏都有视口
+2. **P1（推荐）**：实现 AHUD::PostRender 的自动检测 — 作为信息性产物输出到 SDK，供需要 HUD 级别 Hook 的用户使用
 3. **P2（可选）**：INI 手动覆盖配置支持
 
 **实施工作量估算：**
@@ -985,116 +1008,3 @@ void AHUD::PostRender()
 
 *报告结束*
 
----
-
-## 附录 D：二次审阅纠正与优化（增补）
-
-> 说明：本附录是**在现有报告基础上的增补**，不重写原文。重点是纠正结论边界、补齐证据链、并给出可落地的优化方案。
-
-### D.1 方法纠正（针对“不要全量遍历”）
-
-本轮改为固定路径分析，不再做全仓库无界搜索。每个 UE 版本只读取两处文件：
-
-- `Engine/Source/Runtime/Engine/Classes/Engine/GameViewportClient.h`
-- `Engine/Source/Runtime/Engine/Private/GameViewportClient.cpp`
-
-这样可以把复杂度从“文件总量相关”压缩到“版本数相关”，避免在 UE 超大仓库上浪费时间。
-
-### D.2 证据补充（UGameViewportClient::PostRender）
-
-`PostRender(UCanvas* Canvas)` 逐版本定位如下（PC 主线版本）：
-
-| UE版本 | `GameViewportClient.h` 行号 | `GameViewportClient.cpp` 行号 |
-|---|---:|---:|
-| 4.21 | 431 | 1873 |
-| 4.24 | 446 | 1945 |
-| 4.25 | 458 | 1964 |
-| 4.26 | 462 | 2066 |
-| 4.27 | 462 | 2093 |
-| 5.0 | 473 | 2146 |
-| 5.1 | 477 | 2181 |
-| 5.2 | 481 | 2215 |
-| 5.3 | 483 | 2272 |
-| 5.4 | 484 | 2350 |
-| 5.6 | 480 | 2509 |
-| 5.7 | 480 | 2603 |
-
-并且声明顺序在所有版本保持一致：
-
-- `DrawTitleSafeArea(UCanvas*)`
-- `PostRender(UCanvas*)`
-- `DrawTransition(UCanvas*)`
-- `DrawTransitionMessage(UCanvas*, const FString&)`
-
-### D.3 关键纠正（避免误导实现）
-
-1. `UGameViewportClient::PostRender` 源码实现跨版本稳定，但函数体很短，不适合用单点特征码直接判定。
-2. 4.21 与 4.24 的 `#if WITH_EDITOR` 分支里有 `if (bShowTitleSafeZone)`；4.25+ 变为直接 `DrawTitleSafeArea(Canvas)`。说明 editor 细节可变，但主干 `DrawTransition(Canvas)` 稳定。
-3. 5.3+ 声明增加 `ENGINE_API`，是导出修饰差异，不影响函数语义。
-4. 你当前目标是 `UGameViewportClient::PostRender`，因此实现上应以 viewport 链路为主，`AHUD` 方案只作参考。
-
-### D.4 对 Dumper-7 的增量优化设计（可落地）
-
-#### D.4.1 先修一处基础设施问题（必须）
-
-`PlatformWindows::IterateVTableFunctions` 当前实现里，`NumFunctions` / `OffsetFromStart` 参数没有真正生效，循环硬编码为 `for (int i = 0; i < 0x150; i++)`。  
-这会导致：
-
-- 扫描边界不可控
-- 性能优化失效
-- PostRender 检测难以做有界迭代
-
-建议先修复该函数，再接入 PostRender 检测。
-
-#### D.4.2 检测策略优化为“先 DrawTransition，再反推 PostRender”
-
-直接抓 `PostRender` 不稳；先定位 `DrawTransition` 更稳，因为它有强语义锚点：
-
-- `ETransitionType::*` 分支
-- 多次 `DrawTransitionMessage(...)` 调用
-- 字符串锚点（`"LOADING"`, `"SAVING"`, `"CONNECTING"`, `"PAUSED"` 等）
-
-结合头文件顺序稳定性，可反推：
-
-- `DrawTransitionIdx = X`
-- `PostRenderIdx = X - 1`
-
-#### D.4.3 运行时流程（Windows）
-
-1. `UEClass GVCClass = ObjectArray::FindClassFast("GameViewportClient");`
-2. `UEObject CDO = GVCClass.GetDefaultObject();`
-3. `void** Vft = *(void***)CDO.GetAddress();`
-4. 有界遍历 `Vft` 识别 `DrawTransition`
-5. 反推 `PostRenderIdx = DrawTransitionIdx - 1`
-6. 对 `PostRenderIdx` 做二次校验
-7. 写入 `Off::InSDK::PostRender::*`
-
-#### D.4.4 二次校验建议（降误判）
-
-- 反推槽位函数应明显短于 `DrawTransition`
-- 前段通常只有一次到两次调用（editor 分支可多一次）
-- 调用链应能关联到已识别的 `DrawTransition`（直接调用或虚调位移匹配）
-
-任一关键校验失败则标记“不可信”，走手工覆盖/降级路径。
-
-### D.5 接口与输出建议（Dumper-7 侧）
-
-建议在 `Off::InSDK` 增加：
-
-- `PostRender::GVCPostRenderIndex`
-- `PostRender::GVCPostRenderOffset`
-- `PostRender::GVCDrawTransitionIndex`
-- `PostRender::GVCDrawTransitionOffset`
-
-并在生成的 `Basic.hpp` 的 `namespace Offsets` 中补充：
-
-- `GameViewportClient_PostRender`
-- `GameViewportClient_PostRenderIdx`
-- `GameViewportClient_DrawTransition`
-- `GameViewportClient_DrawTransitionIdx`
-
-### D.6 本轮审阅结论
-
-1. 版本证据链已收敛：UE 4.21~5.7 主线源码中，`UGameViewportClient::PostRender` 形态稳定。
-2. 最稳的落地方案是“`DrawTransition` 锚定 + 邻接反推”，不是对超短 `PostRender` 直接单特征匹配。
-3. 落地前应先修复 `IterateVTableFunctions` 参数失效问题，否则后续虚表扫描都缺少可控边界。
