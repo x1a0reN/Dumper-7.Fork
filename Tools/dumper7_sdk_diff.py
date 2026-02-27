@@ -20,14 +20,14 @@ SDK Version Diff Tool — SDK 版本差异对比工具
   --output PATH    可选，输出 JSON 格式的详细报告
 
 用法：
-    python sdk_diff.py <old_dumpspace_dir> <new_dumpspace_dir> [--output diff_report.json]
+    python dumper7_sdk_diff.py <old_dumpspace_dir> <new_dumpspace_dir> [--output diff_report.json]
 
 示例：
     # 对比同一游戏的两个版本
-    python sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace"
+    python dumper7_sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace"
 
     # 输出 JSON 报告供程序化处理
-    python sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace" --output diff.json
+    python dumper7_sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace" --output diff.json
 
 输出说明：
   [+] 表示新增  [-] 表示删除  [~] 表示变化

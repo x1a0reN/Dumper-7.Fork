@@ -1,6 +1,6 @@
 #pragma once
 
-// Auto-generated from Tools/import_dumper7_dumpspace.py
+// Auto-generated from Tools/dumper7_ida_import.py
 // Do not edit manually. Update the .py file and regenerate.
 // Split into multiple raw string literals to stay under MSVC 16380-char limit.
 

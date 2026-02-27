@@ -19,14 +19,14 @@ UE Version Fingerprinter — UE 引擎版本指纹识别工具
   --output PATH    可选，输出到文件
 
 用法：
-    python ue_version_detect.py <game.exe> [--json] [--output report.txt]
+    python dumper7_ue_version_detect.py <game.exe> [--json] [--output report.txt]
 
 示例：
     # 检测游戏 UE 版本
-    python ue_version_detect.py "C:/Games/MyGame/Binaries/Win64/MyGame-Win64-Shipping.exe"
+    python dumper7_ue_version_detect.py "C:/Games/MyGame/Binaries/Win64/MyGame-Win64-Shipping.exe"
 
     # JSON 格式输出
-    python ue_version_detect.py "C:/Games/MyGame/MyGame.exe" --json
+    python dumper7_ue_version_detect.py "C:/Games/MyGame/MyGame.exe" --json
 
 输出说明：
   Confidence 分为 HIGH / MEDIUM / LOW 三级

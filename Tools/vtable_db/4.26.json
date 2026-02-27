@@ -1,6 +1,6 @@
 {
   "ue_version": "4.26",
-  "generator": "ue_vtable_db_generator.py",
+  "generator": "dumper7_ue_vtable_db_generator.py",
   "classes": {
     "UObjectBase": {
       "parent": null,

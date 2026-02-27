@@ -18,7 +18,7 @@ Dumper-7 Dumpspace Importer for IDA — IDA 符号导入脚本
     EnumsInfo.json      — 枚举定义（可选）
     OffsetsInfo.json    — 全局偏移（可选）
     VTableInfo.json     — VTable RVA（可选，由运行时 dump 生成）
-    VTableDB.json       — VTable 函数名数据库（可选，由 ue_vtable_db_generator.py 生成）
+    VTableDB.json       — VTable 函数名数据库（可选，由 dumper7_ue_vtable_db_generator.py 生成）
 
 使用方法：
   1. 注入 Dumper-7 到游戏，获取 Dumpspace 输出目录

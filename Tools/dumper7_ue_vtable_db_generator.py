@@ -26,14 +26,14 @@ UE VTable Database Generator — UE 虚函数表数据库生成器
   --output PATH    可选，输出 JSON 路径（默认: Tools/vtable_db/<version>.json）
 
 用法：
-    python ue_vtable_db_generator.py <ue_source_root> [--version 4.26] [--output vtable_db/4.26.json]
+    python dumper7_ue_vtable_db_generator.py <ue_source_root> [--version 4.26] [--output vtable_db/4.26.json]
 
 示例：
     # 生成 UE 4.26 的 vtable 数据库
-    python ue_vtable_db_generator.py "D:/UE/UnrealEngine-4.26" --version 4.26
+    python dumper7_ue_vtable_db_generator.py "D:/UE/UnrealEngine-4.26" --version 4.26
 
     # 生成 UE 5.3 的 vtable 数据库到指定路径
-    python ue_vtable_db_generator.py "D:/UE/UnrealEngine-5.3" --version 5.3 --output my_vtable.json
+    python dumper7_ue_vtable_db_generator.py "D:/UE/UnrealEngine-5.3" --version 5.3 --output my_vtable.json
 
 验证方法：
   - 检查输出 JSON 中 UObject 的 ProcessEvent index 是否与游戏中实际值一致
@@ -364,7 +364,7 @@ def _format_output(class_map: Dict[str, ClassVTable], version: str) -> dict:
 
     return {
         "ue_version": version,
-        "generator": "ue_vtable_db_generator.py",
+        "generator": "dumper7_ue_vtable_db_generator.py",
         "classes": classes,
     }
 

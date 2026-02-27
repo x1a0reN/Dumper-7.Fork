@@ -22,18 +22,18 @@ UE Source vs Dump Comparison Tool — UE 源码与 Dump 结构对比工具
   --output PATH    可选，输出 JSON 格式的详细报告
 
 用法：
-    python ue_source_compare.py <ue_source_root> <dumpspace_dir> [--classes AActor,APawn]
+    python dumper7_ue_source_compare.py <ue_source_root> <dumpspace_dir> [--classes AActor,APawn]
 
 示例：
     # 对比所有已知引擎类
-    python ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace"
+    python dumper7_ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace"
 
     # 只对比指定类
-    python ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace" \
+    python dumper7_ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace" \
         --classes AActor,ACharacter,APawn
 
     # 输出 JSON 报告
-    python ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace" \
+    python dumper7_ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace" \
         --output compare_report.json
 
 已知限制：

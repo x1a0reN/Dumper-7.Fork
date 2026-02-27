@@ -864,7 +864,7 @@ void DumpspaceGenerator::Generate()
 
 	// Write the IDAPython importer script in binary mode to preserve LF line endings
 	{
-		std::ofstream ScriptFile(MainFolder / "import_dumper7_dumpspace.py", std::ios::binary);
+		std::ofstream ScriptFile(MainFolder / "dumper7_ida_import.py", std::ios::binary);
 		ScriptFile.write(EMBEDDED_IDA_DUMPSPACE_SCRIPT, sizeof(EMBEDDED_IDA_DUMPSPACE_SCRIPT) - 1);
 	}
 

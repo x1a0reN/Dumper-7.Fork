@@ -9,6 +9,47 @@ SDK Generator for all Unreal Engine games. Supported versions are all of UE4 and
 - Inject the dll into your target game
 - The SDK is generated into the path specified by `Settings::SDKGenerationPath`, by default this is `C:\\Dumper-7`
 - **See [UsingTheSDK](UsingTheSDK.md) for a guide to get started, or to migrate from an old SDK.**
+
+## Fork 增强功能（相对原版）
+
+本仓库是定向增强版，核心新增能力如下：
+
+- PostRender 虚表索引自动识别：
+  - 新增 `UGameViewportClient::PostRender` 与 `AHUD::PostRender` 双通道识别。
+  - 支持 `Dumper-7.ini` 的 `[PostRender]` 手动覆盖（`GVCPostRenderIndex` / `HUDPostRenderIndex`）。
+  - 识别结果写入生成 SDK 的 `Offsets::GVCPostRenderIdx` / `Offsets::HUDPostRenderIdx`。
+- SDK 函数地址注释增强：
+  - 在生成的 `*_classes.hpp` 函数声明后追加模块偏移注释，如 `XXX.exe+0x123456`。
+- CppSDK 项目一键可编译：
+  - 生成 `Inject` 与 `Proxy` 两套工程模板（`.slnx + .vcxproj + Main.cpp`）。
+  - 支持直接以 DLL 方式编译并包含 Hook 示例。
+- VTable Hook 工具库：
+  - 自动生成 `VTHook.hpp`，提供 `SetVirtualFunction` 和 `VTableHook`（RAII）封装。
+- Dumpspace 扩展导出：
+  - 内置 IDA 导入脚本嵌入与导出。
+  - 新增 `VTableInfo.json`、`ce_symbols.lua`、`DataTables/*.json` 导出能力。
+- 分析辅助工具集（Tools）：
+  - IDA 导入、SDK 差异分析、UE 源码对比、UE 版本识别、VTable 数据库生成。
+
+## Tools 脚本命名规范
+
+本 fork 统一采用 `dumper7_*.py` 命名，脚本如下：
+
+- `Tools/dumper7_examples.py`
+- `Tools/dumper7_ida_import.py`
+- `Tools/dumper7_sdk_diff.py`
+- `Tools/dumper7_ue_source_compare.py`
+- `Tools/dumper7_ue_version_detect.py`
+- `Tools/dumper7_ue_vtable_db_generator.py`
+
+示例：
+
+```bash
+python Tools/dumper7_examples.py
+python Tools/dumper7_sdk_diff.py <old_dumpspace_dir> <new_dumpspace_dir>
+python Tools/dumper7_ue_version_detect.py <game.exe>
+```
+
 ## Support Me
 
 KoFi: https://ko-fi.com/fischsalat \
@@ -79,6 +120,10 @@ Example:
 [Settings]
 SleepTimeout=100
 SDKNamespaceName=MyOwnSDKNamespace
+
+[PostRender]
+GVCPostRenderIndex=-1
+HUDPostRenderIndex=-1
 ```
 ## Issues
 

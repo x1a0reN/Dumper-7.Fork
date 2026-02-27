@@ -5,13 +5,13 @@ Dumper-7 Tools 使用示例
 可以直接运行本文件查看各工具的帮助信息，也可以参考下方代码在自己的脚本中调用。
 
 工具列表：
-  1. import_dumper7_dumpspace.py  — IDA 符号导入脚本（在 IDA 中运行）
-  2. sdk_diff.py                  — SDK 版本差异对比
-  3. ue_source_compare.py         — UE 源码与 Dump 结构对比
-  4. ue_vtable_db_generator.py    — UE 虚函数表数据库生成器
+  1. dumper7_ida_import.py  — IDA 符号导入脚本（在 IDA 中运行）
+  2. dumper7_sdk_diff.py                  — SDK 版本差异对比
+  3. dumper7_ue_source_compare.py         — UE 源码与 Dump 结构对比
+  4. dumper7_ue_vtable_db_generator.py    — UE 虚函数表数据库生成器
 
 运行本文件：
-    python examples.py
+    python dumper7_examples.py
 """
 
 import os
@@ -27,7 +27,7 @@ def print_header(title: str) -> None:
 
 
 # =========================================================================
-# 示例 1: SDK 版本差异对比 (sdk_diff.py)
+# 示例 1: SDK 版本差异对比 (dumper7_sdk_diff.py)
 # =========================================================================
 
 def example_sdk_diff():
@@ -37,25 +37,25 @@ def example_sdk_diff():
     典型用途：游戏更新后重新 dump，快速定位偏移变化。
 
     命令行用法：
-        python sdk_diff.py <旧版目录> <新版目录> [--output report.json]
+        python dumper7_sdk_diff.py <旧版目录> <新版目录> [--output report.json]
 
     Python API 用法：
-        from sdk_diff import run_diff
+        from dumper7_sdk_diff import run_diff
         changes, report = run_diff("path/to/old", "path/to/new")
         print(report)
     """
-    print_header("示例 1: SDK 版本差异对比 (sdk_diff.py)")
+    print_header("示例 1: SDK 版本差异对比 (dumper7_sdk_diff.py)")
 
     print("命令行用法:")
-    print('  python sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace"')
+    print('  python dumper7_sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace"')
     print()
     print("带 JSON 输出:")
-    print('  python sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace" --output diff.json')
+    print('  python dumper7_sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace" --output diff.json')
     print()
 
     # Python API 调用示例
     print("Python API 调用:")
-    print("  from sdk_diff import run_diff")
+    print("  from dumper7_sdk_diff import run_diff")
     print('  changes, report = run_diff("old_dumpspace/", "new_dumpspace/")')
     print("  print(report)")
     print()
@@ -68,7 +68,7 @@ def example_sdk_diff():
 
 
 # =========================================================================
-# 示例 2: UE 源码与 Dump 结构对比 (ue_source_compare.py)
+# 示例 2: UE 源码与 Dump 结构对比 (dumper7_ue_source_compare.py)
 # =========================================================================
 
 def example_ue_source_compare():
@@ -76,28 +76,28 @@ def example_ue_source_compare():
     将 dump 结果与 UE 引擎源码交叉对比，区分引擎成员和游戏自定义成员。
 
     命令行用法：
-        python ue_source_compare.py <UE源码根目录> <Dumpspace目录> [--classes AActor,APawn]
+        python dumper7_ue_source_compare.py <UE源码根目录> <Dumpspace目录> [--classes AActor,APawn]
 
     Python API 用法：
-        from ue_source_compare import parse_header_members, compare_class, _load_dump_classes
+        from dumper7_ue_source_compare import parse_header_members, compare_class, _load_dump_classes
     """
-    print_header("示例 2: UE 源码与 Dump 结构对比 (ue_source_compare.py)")
+    print_header("示例 2: UE 源码与 Dump 结构对比 (dumper7_ue_source_compare.py)")
 
     print("命令行用法:")
-    print('  python ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace"')
+    print('  python dumper7_ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace"')
     print()
     print("只对比指定类:")
-    print('  python ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace" \\')
+    print('  python dumper7_ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace" \\')
     print('      --classes AActor,ACharacter,APawn')
     print()
     print("输出 JSON 报告:")
-    print('  python ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace" \\')
+    print('  python dumper7_ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace" \\')
     print('      --output compare_report.json')
     print()
 
     # Python API 调用示例
     print("Python API 调用:")
-    print("  from ue_source_compare import parse_header_members, _load_dump_classes, compare_class")
+    print("  from dumper7_ue_source_compare import parse_header_members, _load_dump_classes, compare_class")
     print()
     print("  # 解析 UE 源码头文件")
     print('  source = parse_header_members("path/to/Actor.h", "AActor")')
@@ -113,7 +113,7 @@ def example_ue_source_compare():
 
 
 # =========================================================================
-# 示例 3: UE VTable 数据库生成 (ue_vtable_db_generator.py)
+# 示例 3: UE VTable 数据库生成 (dumper7_ue_vtable_db_generator.py)
 # =========================================================================
 
 def example_vtable_db_generator():
@@ -121,23 +121,23 @@ def example_vtable_db_generator():
     从 UE 源码生成 vtable 函数名数据库。
 
     命令行用法：
-        python ue_vtable_db_generator.py <UE源码根目录> [--version 4.26]
+        python dumper7_ue_vtable_db_generator.py <UE源码根目录> [--version 4.26]
 
     Python API 用法：
-        from ue_vtable_db_generator import build_vtable_db
+        from dumper7_ue_vtable_db_generator import build_vtable_db
     """
-    print_header("示例 3: UE VTable 数据库生成 (ue_vtable_db_generator.py)")
+    print_header("示例 3: UE VTable 数据库生成 (dumper7_ue_vtable_db_generator.py)")
 
     print("命令行用法:")
-    print('  python ue_vtable_db_generator.py "D:/UE/UnrealEngine-4.26" --version 4.26')
+    print('  python dumper7_ue_vtable_db_generator.py "D:/UE/UnrealEngine-4.26" --version 4.26')
     print()
     print("指定输出路径:")
-    print('  python ue_vtable_db_generator.py "D:/UE/UnrealEngine-5.3" --version 5.3 --output vtable_5.3.json')
+    print('  python dumper7_ue_vtable_db_generator.py "D:/UE/UnrealEngine-5.3" --version 5.3 --output vtable_5.3.json')
     print()
 
     # Python API 调用示例
     print("Python API 调用:")
-    print("  from ue_vtable_db_generator import build_vtable_db, parse_header")
+    print("  from dumper7_ue_vtable_db_generator import build_vtable_db, parse_header")
     print()
     print("  # 生成完整数据库")
     print('  db = build_vtable_db("D:/UE/UnrealEngine-4.26", "4.26")')
@@ -151,7 +151,7 @@ def example_vtable_db_generator():
 
 
 # =========================================================================
-# 示例 4: IDA 符号导入 (import_dumper7_dumpspace.py)
+# 示例 4: IDA 符号导入 (dumper7_ida_import.py)
 # =========================================================================
 
 def example_ida_import():
@@ -160,14 +160,14 @@ def example_ida_import():
 
     注意：此脚本只能在 IDA 的 IDAPython 环境中运行，不能在命令行直接运行。
     """
-    print_header("示例 4: IDA 符号导入 (import_dumper7_dumpspace.py)")
+    print_header("示例 4: IDA 符号导入 (dumper7_ida_import.py)")
 
     print("此脚本在 IDA Pro 中运行，不能在命令行直接调用。")
     print()
     print("使用步骤:")
     print("  1. 注入 Dumper-7 到目标游戏，等待生成 Dumpspace 目录")
     print("  2. 在 IDA 中打开游戏的 .exe 文件")
-    print("  3. File -> Script file... -> 选择 import_dumper7_dumpspace.py")
+    print("  3. File -> Script file... -> 选择 dumper7_ida_import.py")
     print("  4. 在弹出的对话框中选择 Dumpspace/FunctionsInfo.json")
     print("  5. 脚本自动从同目录加载其他 JSON 文件并导入符号")
     print()
@@ -180,11 +180,11 @@ def example_ida_import():
     print()
     print("嵌入式运行:")
     print("  Dumper-7 编译时会将此脚本嵌入 DLL，注入后自动生成")
-    print("  import_dumper7_dumpspace.py 到 Dumpspace 目录，方便直接使用。")
+    print("  dumper7_ida_import.py 到 Dumpspace 目录，方便直接使用。")
 
 
 # =========================================================================
-# 示例 5: UE 版本指纹识别 (ue_version_detect.py)
+# 示例 5: UE 版本指纹识别 (dumper7_ue_version_detect.py)
 # =========================================================================
 
 def example_ue_version_detect():
@@ -192,25 +192,25 @@ def example_ue_version_detect():
     无需注入，通过分析游戏 PE 二进制特征识别 UE 引擎版本。
 
     命令行用法：
-        python ue_version_detect.py <game.exe> [--json] [--output report.txt]
+        python dumper7_ue_version_detect.py <game.exe> [--json] [--output report.txt]
 
     Python API 用法：
-        from ue_version_detect import detect_version, format_report
+        from dumper7_ue_version_detect import detect_version, format_report
     """
-    print_header("示例 5: UE 版本指纹识别 (ue_version_detect.py)")
+    print_header("示例 5: UE 版本指纹识别 (dumper7_ue_version_detect.py)")
 
     print("命令行用法:")
-    print('  python ue_version_detect.py "C:/Games/MyGame/Binaries/Win64/MyGame-Win64-Shipping.exe"')
+    print('  python dumper7_ue_version_detect.py "C:/Games/MyGame/Binaries/Win64/MyGame-Win64-Shipping.exe"')
     print()
     print("JSON 格式输出:")
-    print('  python ue_version_detect.py "C:/Games/MyGame/MyGame.exe" --json')
+    print('  python dumper7_ue_version_detect.py "C:/Games/MyGame/MyGame.exe" --json')
     print()
     print("输出到文件:")
-    print('  python ue_version_detect.py "C:/Games/MyGame/MyGame.exe" --output report.txt')
+    print('  python dumper7_ue_version_detect.py "C:/Games/MyGame/MyGame.exe" --output report.txt')
     print()
 
     print("Python API 调用:")
-    print("  from ue_version_detect import detect_version, format_report")
+    print("  from dumper7_ue_version_detect import detect_version, format_report")
     print()
     print('  result = detect_version("path/to/game.exe")')
     print(f'  print(f"Version: {{result.version}}, Confidence: {{result.confidence}}")')
@@ -232,19 +232,19 @@ def example_full_workflow():
     print_header("示例 6: 完整工作流")
 
     print("步骤 1: 检测游戏 UE 版本（无需注入）")
-    print('  python ue_version_detect.py "C:/Games/MyGame/MyGame.exe"')
+    print('  python dumper7_ue_version_detect.py "C:/Games/MyGame/MyGame.exe"')
     print("  -> 确定 UE 版本，选择正确的 VTableDB")
     print()
     print("步骤 2: 注入 Dumper-7 到游戏")
     print("  -> 生成 C:/Dumper-7/<version>/Dumpspace/ 目录")
     print()
     print("步骤 3: 生成 VTable 数据库（需要 UE 源码）")
-    print('  python ue_vtable_db_generator.py "D:/UE/UnrealEngine-4.26" --version 4.26')
+    print('  python dumper7_ue_vtable_db_generator.py "D:/UE/UnrealEngine-4.26" --version 4.26')
     print("  -> 生成 Tools/vtable_db/4.26.json")
     print("  -> 复制到 Dumpspace 目录并重命名为 VTableDB.json")
     print()
     print("步骤 4: 在 IDA 中导入符号")
-    print("  IDA: File -> Script file -> import_dumper7_dumpspace.py")
+    print("  IDA: File -> Script file -> dumper7_ida_import.py")
     print("  -> 选择 FunctionsInfo.json")
     print()
     print("步骤 5: 在 CE 中加载符号")
@@ -252,10 +252,10 @@ def example_full_workflow():
     print("  -> 加载所有函数、结构体、枚举符号")
     print()
     print("步骤 6: 对比 UE 源码（识别游戏自定义成员）")
-    print('  python ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace"')
+    print('  python dumper7_ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace"')
     print()
     print("步骤 7: 游戏更新后对比 SDK 差异")
-    print('  python sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace"')
+    print('  python dumper7_sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace"')
 
 
 # =========================================================================
@@ -275,10 +275,10 @@ def main():
 
     print(f"\n{'=' * 70}")
     print("所有工具都支持 --help 参数查看详细用法:")
-    print("  python sdk_diff.py --help")
-    print("  python ue_source_compare.py --help")
-    print("  python ue_vtable_db_generator.py --help")
-    print("  python ue_version_detect.py --help")
+    print("  python dumper7_sdk_diff.py --help")
+    print("  python dumper7_ue_source_compare.py --help")
+    print("  python dumper7_ue_vtable_db_generator.py --help")
+    print("  python dumper7_ue_version_detect.py --help")
     print(f"{'=' * 70}")
 
 
