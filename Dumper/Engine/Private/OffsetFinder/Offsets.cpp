@@ -255,209 +255,195 @@ void Off::InSDK::PostRender::InitPostRender_Windows()
 #ifdef PLATFORM_WINDOWS
 #if defined(_WIN64)
 
-	// ═══════════════════════════════════════════════════
 	// P0: UGameViewportClient::PostRender(UCanvas*)
-	// Strategy: Find DrawTransition via L"LOADING" string, then PostRender = DrawTransition - 1
-	// ═══════════════════════════════════════════════════
-
-	if (Off::InSDK::PostRender::GVCPostRenderIndex >= 0)
-		goto hud_detection; // Already set by INI override
-
-	UEClass GameViewportClientClass = ObjectArray::FindClassFast("GameViewportClient");
-
-	if (!GameViewportClientClass)
+	// Find DrawTransition by L"LOADING" string reference, then PostRender = DrawTransition - 1.
+	if (Off::InSDK::PostRender::GVCPostRenderIndex < 0)
 	{
-		std::cerr << "PostRender: GameViewportClient class not found, skipping.\n";
-		goto hud_detection;
-	}
+		UEClass GameViewportClientClass = ObjectArray::FindClassFast("GameViewportClient");
 
-	{
-		UEObject GVCDefaultObject = GameViewportClientClass.GetDefaultObject();
-
-		if (!GVCDefaultObject)
+		if (!GameViewportClientClass)
 		{
-			std::cerr << "PostRender: GameViewportClient CDO not found, skipping.\n";
-			goto hud_detection;
-		}
-
-		void** GVCVft = *reinterpret_cast<void***>(GVCDefaultObject.GetAddress());
-
-		// Find DrawTransition by searching for LEA to L"LOADING" wide string in vtable function bodies
-		auto IsDrawTransition = [](const uint8_t* FuncAddress, [[maybe_unused]] int32_t Index) -> bool
-		{
-			constexpr int32_t SearchRange = 0x400;
-
-			for (int32_t i = 0; i < SearchRange - 7; i++)
-			{
-				const uint8_t byte0 = FuncAddress[i];
-				const uint8_t byte1 = FuncAddress[i + 1];
-
-				// LEA reg, [rip+disp32]: 48 8D xx or 4C 8D xx
-				if ((byte0 == 0x48 || byte0 == 0x4C) && byte1 == 0x8D)
-				{
-					const uint8_t modrm = FuncAddress[i + 2];
-
-					// Validate RIP-relative addressing mode: mod=00, r/m=101
-					if ((modrm & 0xC7) != 0x05)
-						continue;
-
-					const int32_t disp = *reinterpret_cast<const int32_t*>(&FuncAddress[i + 3]);
-					const wchar_t* resolvedAddr = reinterpret_cast<const wchar_t*>(&FuncAddress[i + 7] + disp);
-
-					if (Platform::IsBadReadPtr(resolvedAddr))
-						continue;
-
-					if (wcsncmp(resolvedAddr, L"LOADING", 7) == 0)
-						return true;
-				}
-			}
-			return false;
-		};
-
-		const auto [DrawTransitionPtr, DrawTransitionIdx] = Platform::IterateVTableFunctions(GVCVft, IsDrawTransition);
-
-		if (DrawTransitionPtr && DrawTransitionIdx > 0)
-		{
-			const int32_t PostRenderIdx = DrawTransitionIdx - 1;
-			const uint8_t* PostRenderRaw = reinterpret_cast<const uint8_t*>(GVCVft[PostRenderIdx]);
-
-			if (!Platform::IsBadReadPtr(PostRenderRaw))
-			{
-				// Resolve JMP trampoline on PostRender if present (E9 rel32)
-				const uint8_t* PostRenderResolved = PostRenderRaw;
-				if (*PostRenderRaw == 0xE9)
-				{
-					const int32_t jmpDisp = *reinterpret_cast<const int32_t*>(PostRenderRaw + 1);
-					const uint8_t* jmpTarget = PostRenderRaw + 5 + jmpDisp;
-					if (Platform::IsAddressInProcessRange(jmpTarget))
-						PostRenderResolved = jmpTarget;
-				}
-
-				// Secondary verification: PostRender should CALL or JMP to DrawTransition
-				bool bVerified = false;
-				for (int32_t i = 0; i < 0x200 - 5; i++)
-				{
-					const uint8_t opcode = PostRenderResolved[i];
-
-					// E8 = CALL rel32, E9 = JMP rel32 (tail call optimization)
-					if (opcode == 0xE8 || opcode == 0xE9)
-					{
-						const int32_t callDisp = *reinterpret_cast<const int32_t*>(&PostRenderResolved[i + 1]);
-						const uint8_t* callTarget = &PostRenderResolved[i + 5] + callDisp;
-
-						if (callTarget == reinterpret_cast<const uint8_t*>(DrawTransitionPtr))
-						{
-							bVerified = true;
-							break;
-						}
-					}
-				}
-
-				if (bVerified)
-				{
-					Off::InSDK::PostRender::GVCPostRenderIndex = PostRenderIdx;
-					std::cerr << std::format("GVC-PostRender-Index: 0x{:X} (verified)\n", PostRenderIdx);
-				}
-				else
-				{
-					std::cerr << std::format("GVC-PostRender-Index: 0x{:X} (unverified, not written — use INI override if correct)\n", PostRenderIdx);
-				}
-			}
+			std::cerr << "PostRender: GameViewportClient class not found, skipping.\n";
 		}
 		else
 		{
-			std::cerr << "PostRender: Could not find DrawTransition in GameViewportClient vtable.\n";
+			UEObject GVCDefaultObject = GameViewportClientClass.GetDefaultObject();
+
+			if (!GVCDefaultObject)
+			{
+				std::cerr << "PostRender: GameViewportClient CDO not found, skipping.\n";
+			}
+			else
+			{
+				void** GVCVft = *reinterpret_cast<void***>(GVCDefaultObject.GetAddress());
+
+				auto IsDrawTransition = [](const uint8_t* FuncAddress, [[maybe_unused]] int32_t Index) -> bool
+				{
+					constexpr int32_t SearchRange = 0x400;
+
+					for (int32_t i = 0; i < SearchRange - 7; i++)
+					{
+						const uint8_t byte0 = FuncAddress[i];
+						const uint8_t byte1 = FuncAddress[i + 1];
+
+						// LEA reg, [rip+disp32]: 48 8D xx or 4C 8D xx
+						if ((byte0 == 0x48 || byte0 == 0x4C) && byte1 == 0x8D)
+						{
+							const uint8_t modrm = FuncAddress[i + 2];
+
+							// RIP-relative addressing mode: mod=00, r/m=101
+							if ((modrm & 0xC7) != 0x05)
+								continue;
+
+							const int32_t disp = *reinterpret_cast<const int32_t*>(&FuncAddress[i + 3]);
+							const wchar_t* resolvedAddr = reinterpret_cast<const wchar_t*>(&FuncAddress[i + 7] + disp);
+
+							if (Platform::IsBadReadPtr(resolvedAddr))
+								continue;
+
+							if (wcsncmp(resolvedAddr, L"LOADING", 7) == 0)
+								return true;
+						}
+					}
+					return false;
+				};
+
+				const auto [DrawTransitionPtr, DrawTransitionIdx] = Platform::IterateVTableFunctions(GVCVft, IsDrawTransition);
+
+				if (DrawTransitionPtr && DrawTransitionIdx > 0)
+				{
+					const int32_t PostRenderIdx = DrawTransitionIdx - 1;
+					const uint8_t* PostRenderRaw = reinterpret_cast<const uint8_t*>(GVCVft[PostRenderIdx]);
+
+					if (!Platform::IsBadReadPtr(PostRenderRaw))
+					{
+						// Resolve JMP trampoline on PostRender if present (E9 rel32).
+						const uint8_t* PostRenderResolved = PostRenderRaw;
+						if (*PostRenderRaw == 0xE9)
+						{
+							const int32_t jmpDisp = *reinterpret_cast<const int32_t*>(PostRenderRaw + 1);
+							const uint8_t* jmpTarget = PostRenderRaw + 5 + jmpDisp;
+							if (Platform::IsAddressInProcessRange(jmpTarget))
+								PostRenderResolved = jmpTarget;
+						}
+
+						// Secondary verification: PostRender should CALL/JMP to DrawTransition.
+						bool bVerified = false;
+						for (int32_t i = 0; i < 0x200 - 5; i++)
+						{
+							const uint8_t opcode = PostRenderResolved[i];
+
+							// E8 = CALL rel32, E9 = JMP rel32
+							if (opcode == 0xE8 || opcode == 0xE9)
+							{
+								const int32_t callDisp = *reinterpret_cast<const int32_t*>(&PostRenderResolved[i + 1]);
+								const uint8_t* callTarget = &PostRenderResolved[i + 5] + callDisp;
+
+								if (callTarget == reinterpret_cast<const uint8_t*>(DrawTransitionPtr))
+								{
+									bVerified = true;
+									break;
+								}
+							}
+						}
+
+						if (bVerified)
+						{
+							Off::InSDK::PostRender::GVCPostRenderIndex = PostRenderIdx;
+							std::cerr << std::format("GVC-PostRender-Index: 0x{:X} (verified)\n", PostRenderIdx);
+						}
+						else
+						{
+							std::cerr << std::format("GVC-PostRender-Index: 0x{:X} (unverified, not written - use INI override if correct)\n", PostRenderIdx);
+						}
+					}
+				}
+				else
+				{
+					std::cerr << "PostRender: Could not find DrawTransition in GameViewportClient vtable.\n";
+				}
+			}
 		}
 	}
 
-hud_detection:
-
-	// ═══════════════════════════════════════════════════
-	// P1: AHUD::PostRender() — informational output
-	// Strategy: Dual null check (TEST RAX,RAX x2) + CanEverRender CALL pattern
-	// ═══════════════════════════════════════════════════
-
-	if (Off::InSDK::PostRender::HUDPostRenderIndex >= 0)
-		goto done; // Already set by INI override
-
+	// P1: AHUD::PostRender()
+	// Dual null check (TEST RAX,RAX x2) + CanEverRender-like CALL pattern.
+	if (Off::InSDK::PostRender::HUDPostRenderIndex < 0)
 	{
 		UEClass HUDClass = ObjectArray::FindClassFast("HUD");
 
 		if (!HUDClass)
 		{
 			std::cerr << "PostRender: HUD class not found, skipping.\n\n";
-			goto done;
-		}
-
-		UEObject HUDDefaultObject = HUDClass.GetDefaultObject();
-
-		if (!HUDDefaultObject)
-		{
-			std::cerr << "PostRender: HUD CDO not found, skipping.\n\n";
-			goto done;
-		}
-
-		void** HUDVft = *reinterpret_cast<void***>(HUDDefaultObject.GetAddress());
-
-		auto IsHUDPostRender = [](const uint8_t* FuncAddress, [[maybe_unused]] int32_t Index) -> bool
-		{
-			// Feature B first (cheaper to reject): CALL rel32 + TEST AL,AL
-			// E8 xx xx xx xx 84 C0
-			bool bHasCallTestAL = false;
-			for (int32_t i = 0; i < 0x400 - 7; i++)
-			{
-				if (FuncAddress[i] == 0xE8 && FuncAddress[i + 5] == 0x84 && FuncAddress[i + 6] == 0xC0)
-				{
-					bHasCallTestAL = true;
-					break;
-				}
-			}
-
-			if (!bHasCallTestAL)
-				return false;
-
-			// Feature A: Two TEST RAX,RAX (48 85 C0) in first 0x80 bytes
-			int testRaxCount = 0;
-			for (int32_t i = 0; i < 0x80 - 3; i++)
-			{
-				if (FuncAddress[i] == 0x48 && FuncAddress[i + 1] == 0x85 && FuncAddress[i + 2] == 0xC0)
-					testRaxCount++;
-			}
-
-			return testRaxCount >= 2;
-		};
-
-		auto IsHUDPostRenderWithSizeCheck = [&IsHUDPostRender](const uint8_t* FuncAddress, int32_t Index) -> bool
-		{
-			if (!IsHUDPostRender(FuncAddress, Index))
-				return false;
-
-			// PostRender is a large function (~90 lines, compiles to 0x200+ bytes).
-			// Reject small functions: scan for CC/C3 padding before 0x100 bytes.
-			for (int32_t i = 0x20; i < 0x100; i++)
-			{
-				// INT3 padding (CC CC) or standalone RET (C3) followed by CC/00
-				if (FuncAddress[i] == 0xCC && FuncAddress[i + 1] == 0xCC)
-					return false;
-			}
-
-			return true;
-		};
-
-		const auto [HUDPostRenderPtr, HUDPostRenderIdx] = Platform::IterateVTableFunctions(HUDVft, IsHUDPostRenderWithSizeCheck);
-
-		if (HUDPostRenderPtr)
-		{
-			Off::InSDK::PostRender::HUDPostRenderIndex = HUDPostRenderIdx;
-			std::cerr << std::format("HUD-PostRender-Index: 0x{:X}\n\n", HUDPostRenderIdx);
 		}
 		else
 		{
-			std::cerr << "PostRender: Could not find AHUD::PostRender in vtable.\n\n";
+			UEObject HUDDefaultObject = HUDClass.GetDefaultObject();
+
+			if (!HUDDefaultObject)
+			{
+				std::cerr << "PostRender: HUD CDO not found, skipping.\n\n";
+			}
+			else
+			{
+				void** HUDVft = *reinterpret_cast<void***>(HUDDefaultObject.GetAddress());
+
+				auto IsHUDPostRender = [](const uint8_t* FuncAddress, [[maybe_unused]] int32_t Index) -> bool
+				{
+					// E8 xx xx xx xx 84 C0
+					bool bHasCallTestAL = false;
+					for (int32_t i = 0; i < 0x400 - 7; i++)
+					{
+						if (FuncAddress[i] == 0xE8 && FuncAddress[i + 5] == 0x84 && FuncAddress[i + 6] == 0xC0)
+						{
+							bHasCallTestAL = true;
+							break;
+						}
+					}
+
+					if (!bHasCallTestAL)
+						return false;
+
+					// Two TEST RAX,RAX (48 85 C0) in first 0x80 bytes.
+					int testRaxCount = 0;
+					for (int32_t i = 0; i < 0x80 - 3; i++)
+					{
+						if (FuncAddress[i] == 0x48 && FuncAddress[i + 1] == 0x85 && FuncAddress[i + 2] == 0xC0)
+							testRaxCount++;
+					}
+
+					return testRaxCount >= 2;
+				};
+
+				auto IsHUDPostRenderWithSizeCheck = [&IsHUDPostRender](const uint8_t* FuncAddress, int32_t Index) -> bool
+				{
+					if (!IsHUDPostRender(FuncAddress, Index))
+						return false;
+
+					// Reject small functions: scan for early CC padding before 0x100 bytes.
+					for (int32_t i = 0x20; i < 0x100; i++)
+					{
+						if (FuncAddress[i] == 0xCC && FuncAddress[i + 1] == 0xCC)
+							return false;
+					}
+
+					return true;
+				};
+
+				const auto [HUDPostRenderPtr, HUDPostRenderIdx] = Platform::IterateVTableFunctions(HUDVft, IsHUDPostRenderWithSizeCheck);
+
+				if (HUDPostRenderPtr)
+				{
+					Off::InSDK::PostRender::HUDPostRenderIndex = HUDPostRenderIdx;
+					std::cerr << std::format("HUD-PostRender-Index: 0x{:X}\n\n", HUDPostRenderIdx);
+				}
+				else
+				{
+					std::cerr << "PostRender: Could not find AHUD::PostRender in vtable.\n\n";
+				}
+			}
 		}
 	}
-
-done:
 
 #endif // _WIN64
 #endif // PLATFORM_WINDOWS
