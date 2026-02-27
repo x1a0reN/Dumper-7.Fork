@@ -102,6 +102,14 @@ namespace Off
 		{
 			inline int32 RowMap;
 		}
+
+		namespace PostRender
+		{
+			inline int32 GVCPostRenderIndex = -1;
+			inline int32 HUDPostRenderIndex = -1;
+
+			void InitPostRender_Windows();
+		}
 	}
 
 	namespace FUObjectArray

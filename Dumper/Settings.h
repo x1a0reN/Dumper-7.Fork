@@ -25,6 +25,12 @@ namespace Settings
 		void Load();
 	};
 
+	namespace PostRender
+	{
+		inline int32 GVCPostRenderIndex = -1;
+		inline int32 HUDPostRenderIndex = -1;
+	}
+
 	namespace EngineCore
 	{
 		/* A special setting to fix UEnum::Names where the type is sometimes TArray<FName> and sometimes TArray<TPair<FName, Some8BitData>> */

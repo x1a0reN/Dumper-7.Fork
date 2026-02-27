@@ -132,4 +132,13 @@ void Settings::Config::Load()
 
 	SDKNamespaceName = SDKNamespace;
 	SleepTimeout = max(GetPrivateProfileIntA("Settings", "SleepTimeout", 0, ConfigPath), 0);
+
+	// [PostRender] section - manual override for vtable indices (-1 = auto-detect)
+	int GVCIdx = GetPrivateProfileIntA("PostRender", "GVCPostRenderIndex", -1, ConfigPath);
+	int HUDIdx = GetPrivateProfileIntA("PostRender", "HUDPostRenderIndex", -1, ConfigPath);
+
+	if (GVCIdx >= 0)
+		Settings::PostRender::GVCPostRenderIndex = GVCIdx;
+	if (HUDIdx >= 0)
+		Settings::PostRender::HUDPostRenderIndex = HUDIdx;
 }

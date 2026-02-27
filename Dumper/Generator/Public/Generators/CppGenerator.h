@@ -132,6 +132,9 @@ private:
 
     static void GenerateBasicFiles(StreamType& BasicH, StreamType& BasicCpp, StreamType& AssertionsFile);
 
+    static void GenerateVTHookFile();
+    static void GenerateVSProject(const std::vector<std::string>& AllHppFiles, const std::vector<std::string>& AllCppFiles);
+
     /*
     * Creates the UnrealContainers.hpp file (without allocation code) for the SDK. 
     * File contains the implementation of TArray, FString, TSparseArray, TSet, TMap and iterators for them

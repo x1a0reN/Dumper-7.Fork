@@ -55,6 +55,22 @@ void Generator::InitEngineCore()
 
 	Off::InSDK::Text::InitTextOffsets(); // Must be at this position, relies on offsets initialized in Off::InitPE()
 
+	// PostRender vtable index detection - must be after Off::Init() (needs ClassDefaultObject offset)
+	if (Settings::PostRender::GVCPostRenderIndex >= 0)
+	{
+		Off::InSDK::PostRender::GVCPostRenderIndex = Settings::PostRender::GVCPostRenderIndex;
+		std::cerr << std::format("GVC-PostRender-Index (INI override): 0x{:X}\n", Settings::PostRender::GVCPostRenderIndex);
+	}
+	if (Settings::PostRender::HUDPostRenderIndex >= 0)
+	{
+		Off::InSDK::PostRender::HUDPostRenderIndex = Settings::PostRender::HUDPostRenderIndex;
+		std::cerr << std::format("HUD-PostRender-Index (INI override): 0x{:X}\n", Settings::PostRender::HUDPostRenderIndex);
+	}
+	if (Off::InSDK::PostRender::GVCPostRenderIndex < 0 || Off::InSDK::PostRender::HUDPostRenderIndex < 0)
+	{
+		CALL_PLATFORM_SPECIFIC_FUNCTION(Off::InSDK::PostRender::InitPostRender);
+	}
+
 	InitSettings();
 }
 
