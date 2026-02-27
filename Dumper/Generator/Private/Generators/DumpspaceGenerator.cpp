@@ -1,6 +1,9 @@
 #include "Generators/DumpspaceGenerator.h"
 #include "Generators/EmbeddedIdaScript.h"
 
+#include "Platform.h"
+#include "OffsetFinder/Offsets.h"
+
 #include <fstream>
 
 std::string DumpspaceGenerator::GetStructPrefixedName(const StructWrapper& Struct)
@@ -472,8 +475,342 @@ void DumpspaceGenerator::GeneratedStaticOffsets()
 	DSGen::addOffset(Off::InSDK::Name::bIsUsingAppendStringOverToString ? "OFFSET_APPENDSTRING" : "OFFSET_TOSTRING", Off::InSDK::Name::AppendNameToString);
 	DSGen::addOffset("OFFSET_GNAMES", Off::InSDK::NameArray::GNames);
 	DSGen::addOffset("OFFSET_GWORLD", Off::InSDK::World::GWorld);
+	if (Off::InSDK::Engine::GEngine != 0x0)
+		DSGen::addOffset("OFFSET_GENGINE", Off::InSDK::Engine::GEngine);
 	DSGen::addOffset("OFFSET_PROCESSEVENT", Off::InSDK::ProcessEvent::PEOffset);
 	DSGen::addOffset("INDEX_PROCESSEVENT", Off::InSDK::ProcessEvent::PEIndex);
+
+	if (Off::InSDK::PostRender::GVCPostRenderIndex >= 0)
+		DSGen::addOffset("INDEX_GVC_POSTRENDER", Off::InSDK::PostRender::GVCPostRenderIndex);
+	if (Off::InSDK::PostRender::HUDPostRenderIndex >= 0)
+		DSGen::addOffset("INDEX_HUD_POSTRENDER", Off::InSDK::PostRender::HUDPostRenderIndex);
+}
+
+void DumpspaceGenerator::GenerateVTableInfo(const fs::path& OutputDir)
+{
+	static const char* TargetClasses[] = {
+		"Object", "Actor", "Pawn", "Character",
+		"PlayerController", "GameViewportClient", "HUD",
+		"GameEngine", "World", "GameInstance",
+		"PlayerState", "GameStateBase", "GameModeBase"
+	};
+
+	std::ofstream Out(OutputDir / "VTableInfo.json");
+	if (!Out.is_open())
+	{
+		std::cerr << "VTableInfo: Failed to create output file.\n";
+		return;
+	}
+
+	Out << "{\n  \"data\": {\n";
+
+	bool bFirstClass = true;
+
+	for (const char* ClassName : TargetClasses)
+	{
+		UEClass TargetClass = ObjectArray::FindClassFast(ClassName);
+		if (!TargetClass)
+			continue;
+
+		UEObject CDO = TargetClass.GetDefaultObject();
+		if (!CDO)
+			continue;
+
+		void** Vft = *reinterpret_cast<void***>(CDO.GetAddress());
+		if (!Vft || Platform::IsBadReadPtr(Vft))
+			continue;
+
+		// Count valid vtable entries
+		int32 VTableCount = 0;
+		for (int32 i = 0; i < 1024; i++)
+		{
+			if (Platform::IsBadReadPtr(&Vft[i]))
+				break;
+
+			void* Entry = Vft[i];
+			if (!Entry || !Platform::IsAddressInProcessRange(Entry))
+				break;
+
+			VTableCount++;
+		}
+
+		if (VTableCount == 0)
+			continue;
+
+		if (!bFirstClass)
+			Out << ",\n";
+		bFirstClass = false;
+
+		Out << "    \"" << ClassName << "\": {\n";
+		Out << "      \"vtable_count\": " << VTableCount << ",\n";
+		Out << "      \"entries\": [";
+
+		for (int32 i = 0; i < VTableCount; i++)
+		{
+			uintptr_t Rva = Platform::GetOffset(Vft[i]);
+
+			if (i > 0)
+				Out << ", ";
+			if (i % 8 == 0)
+				Out << "\n        ";
+
+			Out << "[" << i << ", " << Rva << "]";
+		}
+
+		Out << "\n      ]\n    }";
+
+		std::cerr << std::format("VTable: {} - {} entries\n", ClassName, VTableCount);
+	}
+
+	Out << "\n  }\n}\n";
+	Out.close();
+
+	std::cerr << "VTableInfo.json generated.\n\n";
+}
+
+void DumpspaceGenerator::GenerateCESymbols(const fs::path& OutputDir)
+{
+	std::ofstream Lua(OutputDir / "ce_symbols.lua");
+	if (!Lua.is_open())
+	{
+		std::cerr << "CE Symbols: Failed to create ce_symbols.lua\n";
+		return;
+	}
+
+	Lua << "-- Dumper-7 CE Symbol Pack\n";
+	Lua << "-- Auto-generated. Execute this script in Cheat Engine to load all symbols.\n";
+	Lua << "-- Provides: global offsets, vtable functions, reflected functions, structures, enums\n\n";
+	Lua << "local base = getAddress(process)\n";
+	Lua << "local symCount = 0\n\n";
+
+	Lua << "local function reg(name, addr)\n";
+	Lua << "  registerSymbol(name, addr, true)\n";
+	Lua << "  symCount = symCount + 1\n";
+	Lua << "end\n\n";
+
+	// ============ Section 1: Global Offsets ============
+	Lua << "-- ============ Global Offsets ============\n";
+	Lua << std::format("reg(\"GObjects\", base + 0x{:X})\n", Off::InSDK::ObjArray::GObjects);
+	Lua << std::format("reg(\"GNames\", base + 0x{:X})\n", Off::InSDK::NameArray::GNames);
+	Lua << std::format("reg(\"GWorld\", base + 0x{:X})\n", Off::InSDK::World::GWorld);
+	if (Off::InSDK::Engine::GEngine != 0x0)
+		Lua << std::format("reg(\"GEngine\", base + 0x{:X})\n", Off::InSDK::Engine::GEngine);
+	Lua << std::format("reg(\"ProcessEvent\", base + 0x{:X})\n", Off::InSDK::ProcessEvent::PEOffset);
+	if (Off::InSDK::Name::bIsUsingAppendStringOverToString)
+		Lua << std::format("reg(\"FName_AppendString\", base + 0x{:X})\n", Off::InSDK::Name::AppendNameToString);
+	else
+		Lua << std::format("reg(\"FName_ToString\", base + 0x{:X})\n", Off::InSDK::Name::AppendNameToString);
+	Lua << "\n";
+
+	// ============ Section 2: VTable Symbols ============
+	Lua << "-- ============ VTable Symbols ============\n";
+	{
+		static const char* VTableClasses[] = {
+			"Object", "Actor", "Pawn", "Character",
+			"PlayerController", "GameViewportClient", "HUD",
+			"GameEngine", "World", "GameInstance",
+			"PlayerState", "GameStateBase", "GameModeBase"
+		};
+
+		int32 VTableSymCount = 0;
+
+		for (const char* ClassName : VTableClasses)
+		{
+			UEClass TargetClass = ObjectArray::FindClassFast(ClassName);
+			if (!TargetClass)
+				continue;
+
+			UEObject CDO = TargetClass.GetDefaultObject();
+			if (!CDO)
+				continue;
+
+			void** Vft = *reinterpret_cast<void***>(CDO.GetAddress());
+			if (!Vft || Platform::IsBadReadPtr(Vft))
+				continue;
+
+			Lua << "-- " << ClassName << " vtable\n";
+
+			for (int32 i = 0; i < 1024; i++)
+			{
+				if (Platform::IsBadReadPtr(&Vft[i]))
+					break;
+
+				void* Entry = Vft[i];
+				if (!Entry || !Platform::IsAddressInProcessRange(Entry))
+					break;
+
+				uintptr_t Rva = Platform::GetOffset(Entry);
+				Lua << std::format("reg(\"{}::vfunc_{}\", base + 0x{:X})\n", ClassName, i, Rva);
+				VTableSymCount++;
+			}
+
+			Lua << "\n";
+		}
+
+		std::cerr << std::format("CE Symbols: {} vtable symbols\n", VTableSymCount);
+	}
+
+	// ============ Section 3: Function Symbols ============
+	Lua << "-- ============ Function Symbols ============\n";
+	{
+		int32 FuncSymCount = 0;
+
+		for (UEObject Obj : ObjectArray())
+		{
+			if (!Obj.IsA(EClassCastFlags::Function))
+				continue;
+
+			UEFunction Func = Obj.Cast<UEFunction>();
+			void* ExecFunc = Func.GetExecFunction();
+			if (!ExecFunc)
+				continue;
+			uintptr_t ExecOffset = Platform::GetOffset(ExecFunc);
+
+			if (ExecOffset == 0)
+				continue;
+
+			// Get owning class name
+			UEObject Outer = Func.GetOuter();
+			if (!Outer)
+				continue;
+
+			std::string ClassName = Outer.GetCppName();
+			std::string FuncName = Func.GetValidName();
+
+			// CE symbol names can't have certain characters
+			Lua << std::format("reg(\"{}::{}\", base + 0x{:X})\n", ClassName, FuncName, ExecOffset);
+			FuncSymCount++;
+		}
+
+		Lua << "\n";
+		std::cerr << std::format("CE Symbols: {} function symbols\n", FuncSymCount);
+	}
+
+	// ============ Section 4: Structure Definitions ============
+	Lua << "-- ============ Structure Definitions ============\n";
+	Lua << "-- CE createStructure() definitions for memory dissection\n\n";
+	{
+		int32 StructCount = 0;
+
+		for (PackageInfoHandle Package : PackageManager::IterateOverPackageInfos())
+		{
+			if (Package.IsEmpty())
+				continue;
+
+			auto WriteStructDef = [&](int32 Index) -> void
+			{
+				StructWrapper Struct(ObjectArray::GetByIndex<UEStruct>(Index));
+				if (!Struct.IsValid())
+					return;
+
+				std::string StructName = GetStructPrefixedName(Struct);
+				int32 StructSize = Struct.GetSize();
+
+				if (StructSize <= 0)
+					return;
+
+				// Escape quotes in name for Lua string
+				std::string SafeName = StructName;
+				for (auto& c : SafeName) { if (c == '"') c = '_'; }
+
+				Lua << std::format("do local s = createStructure(\"{}\"); s.Size = 0x{:X}; s.DoNotSave = true\n", SafeName, StructSize);
+
+				MemberManager Members = Struct.GetMembers();
+				for (const PropertyWrapper& Prop : Members.IterateMembers())
+				{
+					int32 Offset = Prop.GetOffset();
+					int32 Size = Prop.GetSize();
+					std::string MemberName = Prop.GetName();
+
+					// Determine CE variable type
+					const char* VarType = "vtByteArray";
+					if (Size == 1) VarType = "vtByte";
+					else if (Size == 2) VarType = "vtWord";
+					else if (Size == 4) VarType = "vtDword";
+					else if (Size == 8) VarType = "vtQword";
+
+					// Check for float/double
+					if (Prop.IsUnrealProperty())
+					{
+						auto [Class, FieldClass] = Prop.GetUnrealProperty().GetClass();
+						EClassCastFlags Flags = Class ? Class.GetCastFlags() : FieldClass.GetCastFlags();
+
+						if (Flags & EClassCastFlags::FloatProperty)
+							VarType = "vtSingle";
+						else if (Flags & EClassCastFlags::DoubleProperty)
+							VarType = "vtDouble";
+						else if (Flags & EClassCastFlags::ObjectProperty)
+							VarType = "vtPointer";
+						else if (Flags & EClassCastFlags::ClassProperty)
+							VarType = "vtPointer";
+					}
+
+					// Escape member name
+					std::string SafeMember = MemberName;
+					for (auto& c : SafeMember) { if (c == '"') c = '_'; }
+
+					Lua << std::format("  local e = s:addElement(); e.Offset = 0x{:X}; e.Name = \"{}\"; e.Vartype = {}; e.Bytesize = 0x{:X}\n",
+						Offset, SafeMember, VarType, Size);
+				}
+
+				Lua << "end\n";
+				StructCount++;
+			};
+
+			if (Package.HasStructs())
+				Package.GetSortedStructs().VisitAllNodesWithCallback(WriteStructDef);
+
+			if (Package.HasClasses())
+				Package.GetSortedClasses().VisitAllNodesWithCallback(WriteStructDef);
+		}
+
+		Lua << "\n";
+		std::cerr << std::format("CE Symbols: {} structure definitions\n", StructCount);
+	}
+
+	// ============ Section 5: Enum Definitions ============
+	Lua << "-- ============ Enum Definitions ============\n";
+	Lua << "-- Stored as Lua tables for reference\n";
+	Lua << "Dumper7_Enums = {}\n\n";
+	{
+		int32 EnumCount = 0;
+
+		for (PackageInfoHandle Package : PackageManager::IterateOverPackageInfos())
+		{
+			if (Package.IsEmpty())
+				continue;
+
+			for (int32 EnumIdx : Package.GetEnums())
+			{
+				EnumWrapper Enum(ObjectArray::GetByIndex<UEEnum>(EnumIdx));
+				if (!Enum.IsValid())
+					continue;
+
+				std::string EnumName = GetEnumPrefixedName(Enum);
+				std::string SafeName = EnumName;
+				for (auto& c : SafeName) { if (c == '"' || c == ':') c = '_'; }
+
+				Lua << std::format("Dumper7_Enums[\"{}\"] = {{\n", SafeName);
+
+				for (const EnumCollisionInfo& Info : Enum.GetMembers())
+				{
+					std::string ValName = Info.GetUniqueName();
+					for (auto& c : ValName) { if (c == '"') c = '_'; }
+					Lua << std::format("  [\"{}\"] = {},\n", ValName, Info.GetValue());
+				}
+
+				Lua << "}\n";
+				EnumCount++;
+			}
+		}
+
+		Lua << "\n";
+		std::cerr << std::format("CE Symbols: {} enum definitions\n", EnumCount);
+	}
+
+	Lua << "print(string.format(\"Dumper-7: %d symbols registered.\", symCount))\n";
+	Lua.close();
+	std::cerr << "ce_symbols.lua generated.\n\n";
 }
 
 void DumpspaceGenerator::Generate()
@@ -529,4 +866,10 @@ void DumpspaceGenerator::Generate()
 		std::ofstream ScriptFile(MainFolder / "import_dumper7_dumpspace.py", std::ios::binary);
 		ScriptFile.write(EMBEDDED_IDA_DUMPSPACE_SCRIPT, sizeof(EMBEDDED_IDA_DUMPSPACE_SCRIPT) - 1);
 	}
+
+	// Dump vtable RVAs for key UE classes
+	GenerateVTableInfo(MainFolder);
+
+	// Generate comprehensive CE symbol script
+	GenerateCESymbols(MainFolder);
 }

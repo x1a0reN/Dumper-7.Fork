@@ -56,6 +56,8 @@ private:
     static DSGen::FunctionHolder GenearateFunction(const FunctionWrapper& Function);
 
     static void GeneratedStaticOffsets();
+    static void GenerateVTableInfo(const fs::path& OutputDir);
+    static void GenerateCESymbols(const fs::path& OutputDir);
 
 public:
     static void Generate();

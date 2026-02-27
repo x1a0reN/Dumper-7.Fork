@@ -103,6 +103,13 @@ namespace Off
 			inline int32 RowMap;
 		}
 
+		namespace Engine
+		{
+			inline int32 GEngine = 0x0;
+
+			void InitGEngine();
+		}
+
 		namespace PostRender
 		{
 			inline int32 GVCPostRenderIndex = -1;

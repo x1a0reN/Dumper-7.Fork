@@ -392,6 +392,10 @@ class ImportStats:
     placeholder_typedefs_created: int = 0
 
     offsets_named: int = 0
+    indices_logged: int = 0
+
+    vtable_classes: int = 0
+    vtable_funcs_named: int = 0
 
 
 @dataclass
@@ -501,11 +505,16 @@ class Dumper7IdaImporter:
         self._import_functions(functions_json.get("data", []))
         self._flush_alias_comments()
         self._import_no_address_function_index()
-
+)PY0"
+R"PY1(
         if offsets_json:
             self.log("Importing offsets...")
-)PY0"
-R"PY1(            self._import_offsets(offsets_json.get("data", []))
+            self._import_offsets(offsets_json.get("data", []))
+
+        vtable_json = self._load_optional_json("VTableInfo.json")
+        if vtable_json:
+            self.log("Importing vtable info...")
+            self._import_vtable_info(vtable_json.get("data", {}))
 
         self._print_summary()
         return self.stats
@@ -866,12 +875,12 @@ R"PY1(            self._import_offsets(offsets_json.get("data", []))
             nbytes = max(1, member.size)
             flags = self._member_flag_for_size(nbytes)
 
-            rc = idc.add_struc_member(sid, member_name, member.offset, flags, -1, nbytes)
+)PY1"
+R"PY2(            rc = idc.add_struc_member(sid, member_name, member.offset, flags, -1, nbytes)
             if rc != 0:
                 # If the preferred name failed, try a fallback name once.
                 fallback_name = self._unique_name(f"{member_name}_m", used_names)
-)PY1"
-R"PY2(                rc = idc.add_struc_member(sid, fallback_name, member.offset, flags, -1, nbytes)
+                rc = idc.add_struc_member(sid, fallback_name, member.offset, flags, -1, nbytes)
                 if rc != 0:
                     continue
                 member_name = fallback_name
@@ -1212,7 +1221,8 @@ R"PY2(                rc = idc.add_struc_member(sid, fallback_name, member.offse
 
     def _existing_segment_name_set(self) -> set:
         names: set = set()
-        seg_qty = ida_segment.get_segm_qty()
+)PY2"
+R"PY3(        seg_qty = ida_segment.get_segm_qty()
         for idx in range(seg_qty):
             seg = ida_segment.getnseg(idx)
             if seg is None:
@@ -1222,8 +1232,7 @@ R"PY2(                rc = idc.add_struc_member(sid, fallback_name, member.offse
                 names.add(name)
         return names
 
-)PY2"
-R"PY3(    def _next_symbol_index_segment_name(self) -> str:
+    def _next_symbol_index_segment_name(self) -> str:
         names = self._existing_segment_name_set()
         if NO_OFFSET_SEGMENT_BASENAME not in names:
             return NO_OFFSET_SEGMENT_BASENAME
@@ -1329,16 +1338,22 @@ R"PY3(    def _next_symbol_index_segment_name(self) -> str:
     def _import_offsets(self, offsets_data: Iterable[Any]) -> None:
         imagebase = _get_imagebase()
         used_names: set = set()
+        index_entries: List[Tuple[str, int]] = []
 
         for item in offsets_data:
             if not isinstance(item, list) or len(item) < 2:
                 continue
 
             name = str(item[0]) if item[0] is not None else "Offset"
-            if not name.startswith("OFFSET_"):
-                continue
             rva = self._to_int(item[1], -1)
             if rva < 0:
+                continue
+
+            if name.startswith("INDEX_"):
+                index_entries.append((name, rva))
+                continue
+
+            if not name.startswith("OFFSET_"):
                 continue
 
             ea = imagebase + rva
@@ -1349,6 +1364,100 @@ R"PY3(    def _next_symbol_index_segment_name(self) -> str:
             final_name = self._unique_name(preferred, used_names)
             if self._safe_set_name(ea, final_name, ida_name.SN_NOWARN):
                 self.stats.offsets_named += 1
+
+        for idx_name, idx_value in index_entries:
+            self.log(f"  {idx_name} = 0x{idx_value:X} ({idx_value})")
+            self.stats.indices_logged += 1
+
+    def _load_vtable_db(self) -> Optional[Dict[str, Any]]:
+        """Try to load a VTableDB JSON (offline function name database) from the Dumpspace dir."""
+        for name in ("VTableDB.json", "vtable_db.json"):
+            path = os.path.join(self.dumpspace_dir, name)
+            if os.path.isfile(path):
+                return self._load_json(path)
+        return None
+
+    def _import_vtable_info(self, vtable_data: Dict[str, Any]) -> None:
+        imagebase = _get_imagebase()
+
+        # Try to load offline function name DB
+        vtable_db = self._load_vtable_db()
+        db_classes: Dict[str, Any] = {}
+        if vtable_db and isinstance(vtable_db.get("classes"), dict):
+            db_classes = vtable_db["classes"]
+
+        for class_name, class_info in vtable_data.items():
+            if not isinstance(class_info, dict):
+                continue
+
+            entries = class_info.get("entries", [])
+            if not entries:
+                continue
+
+            # Build index->name map from DB if available
+            func_names: Dict[int, str] = {}
+            db_key = self._find_db_class_key(class_name, db_classes)
+            if db_key and "functions" in db_classes[db_key]:
+                for func_entry in db_classes[db_key]["functions"]:
+                    if isinstance(func_entry, list) and len(func_entry) >= 2:
+                        func_names[int(func_entry[0])] = str(func_entry[1])
+
+            self.stats.vtable_classes += 1
+            named_count = 0
+
+            for entry in entries:
+                if not isinstance(entry, list) or len(entry) < 2:
+                    continue
+
+                vtable_idx = int(entry[0])
+                rva = int(entry[1])
+                ea = imagebase + rva
+
+                if not ida_bytes.is_loaded(ea):
+                    continue
+
+                # Determine function name
+                if vtable_idx in func_names:
+                    fname = func_names[vtable_idx]
+                    symbol = f"{class_name}__{self._sanitize_identifier(fname)}"
+                else:
+                    symbol = f"{class_name}__vfunc_{vtable_idx}"
+
+                symbol = self._fit_name_length(symbol)
+
+                # Only set name if the address doesn't already have a meaningful name
+                existing = idc.get_name(ea, getattr(ida_name, "GN_VISIBLE", 0)) or ""
+                if existing.startswith("sub_") or existing.startswith("nullsub") or not existing:
+                    final = self._safe_set_name(ea, symbol, ida_name.SN_NOWARN)
+                    if final:
+                        named_count += 1
+
+                # Ensure IDA recognizes it as a function
+                ida_funcs.add_func(ea)
+
+                # Set comment
+                cmt = f"VTable[{vtable_idx}] of {class_name}"
+                if vtable_idx in func_names:
+                    cmt += f" ({func_names[vtable_idx]})"
+                ida_bytes.set_cmt(ea, cmt, True)
+
+            self.stats.vtable_funcs_named += named_count
+            self.log(f"  VTable {class_name}: {len(entries)} entries, {named_count} named")
+
+    @staticmethod
+    def _find_db_class_key(class_name: str, db_classes: Dict[str, Any]) -> Optional[str]:
+        """Find the matching key in the VTableDB for a runtime class name."""
+        # Runtime uses short names (e.g. "Object"), DB uses prefixed (e.g. "UObject")
+        candidates = [
+            class_name,
+            f"U{class_name}",
+            f"A{class_name}",
+            f"F{class_name}",
+        ]
+        for c in candidates:
+            if c in db_classes:
+                return c
+        return None
 
     def _print_summary(self) -> None:
         s = self.stats
@@ -1383,7 +1492,9 @@ R"PY3(    def _next_symbol_index_segment_name(self) -> str:
                 s.funcs_indexed_without_native_addr,
             )
         )
-        self.log(f"Offsets named: {s.offsets_named}")
+        self.log(f"Offsets named: {s.offsets_named}, indices logged: {s.indices_logged}")
+        if s.vtable_classes > 0:
+            self.log(f"VTable: classes={s.vtable_classes}, funcs_named={s.vtable_funcs_named}")
 
 
 def choose_dumpspace_dir() -> Optional[str]:

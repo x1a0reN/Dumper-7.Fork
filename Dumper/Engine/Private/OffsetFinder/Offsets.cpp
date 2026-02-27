@@ -144,6 +144,47 @@ void Off::InSDK::World::InitGWorld()
 		std::cerr << std::format("\nGWorld WAS NOT FOUND!!!!!!!!!\n\n");
 }
 
+/* UEngine* GEngine */
+void Off::InSDK::Engine::InitGEngine()
+{
+	UEClass GameEngineClass = ObjectArray::FindClassFast("GameEngine");
+
+	if (!GameEngineClass)
+	{
+		std::cerr << "GEngine: 'GameEngine' class not found, skipping.\n";
+		return;
+	}
+
+	for (UEObject Obj : ObjectArray())
+	{
+		if (Obj.HasAnyFlags(EObjectFlags::ClassDefaultObject) || !Obj.IsA(GameEngineClass))
+			continue;
+
+		auto Results = Platform::FindAllAlignedValuesInProcess(Obj.GetAddress());
+
+		void* Result = nullptr;
+		if (Results.size() == 1)
+		{
+			Result = Results[0];
+		}
+		else if (Results.size() >= 2)
+		{
+			/* GEngine is typically the only global pointer to the engine instance */
+			Result = Results[0];
+			std::cerr << std::format("GEngine: Found {} candidates, using first.\n", Results.size());
+		}
+
+		if (Result)
+		{
+			Off::InSDK::Engine::GEngine = Platform::GetOffset(Result);
+			std::cerr << std::format("GEngine-Offset: 0x{:X}\n\n", Off::InSDK::Engine::GEngine);
+			return;
+		}
+	}
+
+	std::cerr << "GEngine: Could not find GEngine pointer.\n\n";
+}
+
 /* FText */
 void Off::InSDK::Text::InitTextOffsets()
 {
