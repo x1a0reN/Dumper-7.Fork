@@ -524,9 +524,9 @@ void DumpspaceGenerator::Generate()
 
 	DSGen::dump();
 
-	// Write the IDAPython importer script into the Dumpspace output directory
+	// Write the IDAPython importer script in binary mode to preserve LF line endings
 	{
-		StreamType ScriptFile(MainFolder / "import_dumper7_dumpspace.py");
-		ScriptFile << EMBEDDED_IDA_DUMPSPACE_SCRIPT;
+		std::ofstream ScriptFile(MainFolder / "import_dumper7_dumpspace.py", std::ios::binary);
+		ScriptFile.write(EMBEDDED_IDA_DUMPSPACE_SCRIPT, sizeof(EMBEDDED_IDA_DUMPSPACE_SCRIPT) - 1);
 	}
 }

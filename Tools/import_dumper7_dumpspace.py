@@ -465,7 +465,7 @@ class Dumper7IdaImporter:
         self.placeholder_type_map: Dict[str, str] = {}
         self.no_addr_function_index: List[FunctionIndexRecord] = []
         ida_max_name_len = int(getattr(ida_name, "MAXNAMELEN", FUNCTION_NAME_MAX_LEN))
-        # IDA名长度通常包含结尾'\0'，保守减1并限制在合理范围。
+        # IDA MAXNAMELEN usually includes the trailing '\0'; subtract 1 and clamp to a sane range.
         self.max_name_len = max(64, min(FUNCTION_NAME_MAX_LEN, ida_max_name_len - 1))
 
     @staticmethod
@@ -1134,7 +1134,7 @@ class Dumper7IdaImporter:
         if idc.set_name(ea, candidate, flags):
             return candidate
 
-        # 兜底：用哈希压缩后的名字再试一次
+        # Fallback: retry with a hash-compressed name
         fallback = self._fit_name_length(f"{preferred}_{self._hash_suffix(preferred + hex(ea))}")
         fallback = self._ensure_unique_global_name(fallback, ea)
         if idc.set_name(ea, fallback, flags):
@@ -1233,7 +1233,7 @@ class Dumper7IdaImporter:
         if max_ea <= 0:
             max_ea = _get_screen_ea() + 0x100000
 
-        # 兼容某些数据库里 INF_MAX_EA 未覆盖全部段范围的情况。
+        # Handle databases where INF_MAX_EA does not cover all segment ranges.
         seg_qty = ida_segment.get_segm_qty()
         for idx in range(seg_qty):
             seg = ida_segment.getnseg(idx)
