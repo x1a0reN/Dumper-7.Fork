@@ -2321,6 +2321,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
       <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
 
@@ -2330,24 +2331,22 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
 
 )";
 
-		// ClCompile items - only Main.cpp and Basic.cpp; add more SDK files as needed
+		// ClCompile items
 		Vcxproj << "  <ItemGroup>\n";
 		Vcxproj << "    <ClCompile Include=\"Main.cpp\" />\n";
 		Vcxproj << "    <ClCompile Include=\"..\\SDK\\Basic.cpp\" />\n";
+		Vcxproj << "    <ClCompile Include=\"..\\SDK\\CoreUObject_functions.cpp\" />\n";
+		Vcxproj << "    <ClCompile Include=\"..\\SDK\\Engine_functions.cpp\" />\n";
 		Vcxproj << "  </ItemGroup>\n\n";
 
-		// ClInclude items - top-level headers only
+		// ClInclude items
 		Vcxproj << "  <ItemGroup>\n";
-		Vcxproj << "    <ClInclude Include=\"..\\SDK.hpp\" />\n";
-		Vcxproj << "    <ClInclude Include=\"..\\PropertyFixup.hpp\" />\n";
-		Vcxproj << "    <ClInclude Include=\"..\\UnrealContainers.hpp\" />\n";
-		Vcxproj << "    <ClInclude Include=\"..\\NameCollisions.inl\" />\n";
-		Vcxproj << "    <ClInclude Include=\"..\\UtfN.hpp\" />\n";
 		Vcxproj << "    <ClInclude Include=\"..\\VTHook.hpp\" />\n";
 		Vcxproj << "  </ItemGroup>\n\n";
 
@@ -2373,24 +2372,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
     <ClCompile Include="..\SDK\Basic.cpp">
       <Filter>SDK</Filter>
     </ClCompile>
+    <ClCompile Include="..\SDK\CoreUObject_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDK\Engine_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
   </ItemGroup>
 
   <ItemGroup>
-    <ClInclude Include="..\SDK.hpp">
-      <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="..\PropertyFixup.hpp">
-      <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="..\UnrealContainers.hpp">
-      <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NameCollisions.inl">
-      <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="..\UtfN.hpp">
-      <Filter>SDK</Filter>
-    </ClInclude>
     <ClInclude Include="..\VTHook.hpp">
       <Filter>SDK</Filter>
     </ClInclude>
@@ -4325,8 +4315,8 @@ namespace Offsets
 	constexpr int32 GWorld            = 0x{:08X};
 	constexpr int32 ProcessEvent      = 0x{:08X};
 	constexpr int32 ProcessEventIdx   = 0x{:08X};
-	constexpr int32 GVCPostRenderIdx  = {};
-	constexpr int32 HUDPostRenderIdx  = {};
+	constexpr int32 GVCPostRenderIdx  = 0x{:08X};
+	constexpr int32 HUDPostRenderIdx  = 0x{:08X};
 }}
 )", max(Off::InSDK::ObjArray::GObjects, 0x0),
 	max(Off::InSDK::Name::AppendNameToString, 0x0),
