@@ -47,6 +47,8 @@ private:
 	static inline bool bDumepdEditorOnlyMetadata = false;
 
 public:
+    static const fs::path& GetDumperFolder() { return DumperFolder; }
+
     static void InitEngineCore();
     static void InitInternal();
 

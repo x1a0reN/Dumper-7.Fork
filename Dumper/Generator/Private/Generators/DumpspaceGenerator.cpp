@@ -1,5 +1,6 @@
 #include "Generators/DumpspaceGenerator.h"
 #include "Generators/EmbeddedIdaScript.h"
+#include "Generators/Generator.h"
 
 #include "Platform.h"
 #include "OffsetFinder/Offsets.h"
@@ -872,4 +873,330 @@ void DumpspaceGenerator::Generate()
 
 	// Generate comprehensive CE symbol script
 	GenerateCESymbols(MainFolder);
+
+	// Export all DataTable row data as JSON
+	GenerateDataTables(Generator::GetDumperFolder());
+}
+
+
+/* ── DataTable Dumper helpers ── */
+
+static std::string EscapeJsonString(const std::string& Input)
+{
+	std::string Out;
+	Out.reserve(Input.size() + 8);
+	for (char c : Input)
+	{
+		switch (c)
+		{
+		case '"':  Out += "\\\""; break;
+		case '\\': Out += "\\\\"; break;
+		case '\n': Out += "\\n";  break;
+		case '\r': Out += "\\r";  break;
+		case '\t': Out += "\\t";  break;
+		default:   Out += c;      break;
+		}
+	}
+	return Out;
+}
+
+static void WritePropertyValueAsJson(std::ofstream& Out, UEProperty Prop, const uint8* RowData, int Depth = 0);
+
+static void WriteStructPropertiesAsJson(std::ofstream& Out, UEStruct Struct, const uint8* Data, int Depth)
+{
+	auto Props = Struct.GetProperties();
+	Out << "{";
+	bool bFirst = true;
+	for (auto& P : Props)
+	{
+		if (!bFirst) Out << ",";
+		bFirst = false;
+		Out << "\n" << std::string((Depth + 1) * 2, ' ');
+		Out << "\"" << EscapeJsonString(P.GetValidName()) << "\": ";
+		WritePropertyValueAsJson(Out, P, Data, Depth + 1);
+	}
+	if (!Props.empty())
+		Out << "\n" << std::string(Depth * 2, ' ');
+	Out << "}";
+}
+
+static void WritePropertyValueAsJson(std::ofstream& Out, UEProperty Prop, const uint8* RowData, int Depth)
+{
+	const int32 Offset = Prop.GetOffset();
+	const int32 Size = Prop.GetSize();
+	const uint8* Data = RowData + Offset;
+
+	EClassCastFlags TypeFlags = EClassCastFlags::None;
+	{
+		auto [UClass, FFieldClass] = Prop.GetClass();
+		TypeFlags = UClass ? UClass.GetCastFlags() : FFieldClass.GetCastFlags();
+	}
+
+	try
+	{
+		if (TypeFlags & EClassCastFlags::BoolProperty)
+		{
+			auto BoolProp = Prop.Cast<UEBoolProperty>();
+			uint8 FieldMask = BoolProp.GetFieldMask();
+			uint8 ByteOffset = BoolProp.GetByteOffset();
+			bool bValue = (*(RowData + Offset + ByteOffset) & FieldMask) != 0;
+			Out << (bValue ? "true" : "false");
+		}
+		else if (TypeFlags & EClassCastFlags::Int8Property)
+		{
+			Out << static_cast<int>(*reinterpret_cast<const int8*>(Data));
+		}
+		else if (TypeFlags & EClassCastFlags::ByteProperty)
+		{
+			Out << static_cast<int>(*Data);
+		}
+		else if (TypeFlags & EClassCastFlags::Int16Property)
+		{
+			Out << *reinterpret_cast<const int16*>(Data);
+		}
+		else if (TypeFlags & EClassCastFlags::UInt16Property)
+		{
+			Out << *reinterpret_cast<const uint16*>(Data);
+		}
+		else if (TypeFlags & EClassCastFlags::IntProperty)
+		{
+			Out << *reinterpret_cast<const int32*>(Data);
+		}
+		else if (TypeFlags & EClassCastFlags::UInt32Property)
+		{
+			Out << *reinterpret_cast<const uint32*>(Data);
+		}
+		else if (TypeFlags & EClassCastFlags::Int64Property)
+		{
+			Out << *reinterpret_cast<const int64*>(Data);
+		}
+		else if (TypeFlags & EClassCastFlags::UInt64Property)
+		{
+			Out << *reinterpret_cast<const uint64*>(Data);
+		}
+		else if (TypeFlags & EClassCastFlags::FloatProperty)
+		{
+			float v = *reinterpret_cast<const float*>(Data);
+			if (std::isnan(v) || std::isinf(v)) Out << "null";
+			else Out << v;
+		}
+		else if (TypeFlags & EClassCastFlags::DoubleProperty)
+		{
+			double v = *reinterpret_cast<const double*>(Data);
+			if (std::isnan(v) || std::isinf(v)) Out << "null";
+			else Out << v;
+		}
+		else if (TypeFlags & EClassCastFlags::NameProperty)
+		{
+			FName Name(Data);
+			Out << "\"" << EscapeJsonString(Name.ToString()) << "\"";
+		}
+		else if (TypeFlags & EClassCastFlags::StrProperty)
+		{
+			const auto* Str = reinterpret_cast<const FString*>(Data);
+			if (Str->IsValid() && Str->Num() > 0)
+			{
+				std::wstring Wide(Str->CStr(), Str->Num() - 1);
+				std::string Narrow(Wide.begin(), Wide.end());
+				Out << "\"" << EscapeJsonString(Narrow) << "\"";
+			}
+			else
+			{
+				Out << "\"\"";
+			}
+		}
+		else if (TypeFlags & EClassCastFlags::EnumProperty)
+		{
+			auto EnumProp = Prop.Cast<UEEnumProperty>();
+			UEProperty UnderlyingProp = EnumProp.GetUnderlayingProperty();
+			int64 Val = 0;
+			if (UnderlyingProp)
+			{
+				int32 USize = UnderlyingProp.GetSize();
+				if (USize == 1) Val = *reinterpret_cast<const uint8*>(Data);
+				else if (USize == 2) Val = *reinterpret_cast<const uint16*>(Data);
+				else if (USize == 4) Val = *reinterpret_cast<const int32*>(Data);
+				else if (USize == 8) Val = *reinterpret_cast<const int64*>(Data);
+			}
+			else
+			{
+				Val = *reinterpret_cast<const uint8*>(Data);
+			}
+			Out << Val;
+		}
+		else if (TypeFlags & EClassCastFlags::ObjectProperty)
+		{
+			void* ObjPtr = *reinterpret_cast<void* const*>(Data);
+			if (ObjPtr)
+			{
+				UEObject Obj(ObjPtr);
+				Out << "\"" << EscapeJsonString(Obj.GetName()) << "\"";
+			}
+			else
+			{
+				Out << "null";
+			}
+		}
+		else if (TypeFlags & EClassCastFlags::StructProperty)
+		{
+			auto StructProp = Prop.Cast<UEStructProperty>();
+			UEStruct InnerStruct = StructProp.GetUnderlayingStruct();
+			if (InnerStruct && Depth < 3)
+			{
+				WriteStructPropertiesAsJson(Out, InnerStruct, Data, Depth);
+			}
+			else
+			{
+				Out << "\"<struct>\"";
+			}
+		}
+		else if (TypeFlags & EClassCastFlags::ArrayProperty)
+		{
+			const auto* Arr = reinterpret_cast<const TArray<uint8>*>(Data);
+			if (Arr && Arr->IsValid())
+				Out << "\"<array[" << Arr->Num() << "]>\"";
+			else
+				Out << "\"<array>\"";
+		}
+		else if (TypeFlags & EClassCastFlags::TextProperty)
+		{
+			Out << "\"<FText>\"";
+		}
+		else if (TypeFlags & EClassCastFlags::MapProperty)
+		{
+			Out << "\"<TMap>\"";
+		}
+		else
+		{
+			/* Fallback: hex dump for unknown types */
+			if (Size <= 8)
+			{
+				uint64 Raw = 0;
+				memcpy(&Raw, Data, Size);
+				Out << std::format("\"0x{:X}\"", Raw);
+			}
+			else
+			{
+				Out << "\"<" << Size << " bytes>\"";
+			}
+		}
+	}
+	catch (...)
+	{
+		Out << "\"<error>\"";
+	}
+}
+
+void DumpspaceGenerator::GenerateDataTables(const fs::path& DumperFolder)
+{
+	const UEClass DataTableClass = ObjectArray::FindClassFast("DataTable");
+	if (!DataTableClass)
+	{
+		std::cerr << "DataTable class not found, skipping DataTable export.\n";
+		return;
+	}
+
+	const int32 RowMapOffset = Off::InSDK::UDataTable::RowMap;
+	const int32 RowStructOffset = RowMapOffset - static_cast<int32>(sizeof(void*));
+	const int32 FNameSz = Off::InSDK::Name::FNameSize;
+
+	struct alignas(0x4) Name08 { uint8 Pad[0x08]; };
+	struct alignas(0x4) Name16 { uint8 Pad[0x10]; };
+
+	const fs::path DataTablesDir = DumperFolder / "DataTables";
+	std::error_code ec;
+	fs::create_directories(DataTablesDir, ec);
+
+	int TableCount = 0;
+
+	for (UEObject Obj : ObjectArray())
+	{
+		if (!Obj.IsA(DataTableClass))
+			continue;
+
+		try
+		{
+			uint8* ObjPtr = reinterpret_cast<uint8*>(const_cast<void*>(Obj.GetAddress()));
+			if (!ObjPtr) continue;
+
+			/* Read RowStruct pointer (UScriptStruct*) */
+			UEStruct RowStruct(*reinterpret_cast<void**>(ObjPtr + RowStructOffset));
+			if (!RowStruct) continue;
+
+			std::string TableName = Obj.GetName();
+			std::string RowStructName = RowStruct.GetName();
+			auto RowProps = RowStruct.GetProperties();
+
+			/* Build output path: DataTables/<TableName>.json */
+			std::string SafeTableName = TableName;
+			FileNameHelper::MakeValidFileName(SafeTableName);
+			fs::path OutPath = DataTablesDir / (SafeTableName + ".json");
+
+			std::ofstream File(OutPath);
+			if (!File.is_open()) continue;
+
+			/* JSON header */
+			File << "{\n";
+			File << "  \"table_name\": \"" << EscapeJsonString(TableName) << "\",\n";
+			File << "  \"row_struct\": \"" << EscapeJsonString(RowStructName) << "\",\n";
+
+			/* Column definitions */
+			File << "  \"columns\": [";
+			for (size_t i = 0; i < RowProps.size(); i++)
+			{
+				if (i > 0) File << ",";
+				File << "\n    {\"name\": \"" << EscapeJsonString(RowProps[i].GetValidName())
+					 << "\", \"type\": \"" << EscapeJsonString(RowProps[i].GetCppType())
+					 << "\", \"offset\": \"0x" << std::format("{:X}", RowProps[i].GetOffset())
+					 << "\", \"size\": " << RowProps[i].GetSize() << "}";
+			}
+			if (!RowProps.empty()) File << "\n  ";
+			File << "],\n";
+
+			/* Iterate RowMap: TMap<FName, uint8*> */
+			File << "  \"rows\": {";
+			int RowCount = 0;
+			bool bFirstRow = true;
+
+			auto ProcessRowMap = [&]<typename NameType>(TMap<NameType, uint8*>& Map)
+			{
+				for (auto It = begin(Map); It != end(Map); ++It)
+				{
+					const uint8* RowData = It->Value();
+					if (!RowData) continue;
+
+					FName RowName(&It->Key());
+					std::string RowNameStr = RowName.ToString();
+
+					if (!bFirstRow) File << ",";
+					bFirstRow = false;
+					File << "\n    \"" << EscapeJsonString(RowNameStr) << "\": ";
+
+					WriteStructPropertiesAsJson(File, RowStruct, RowData, 2);
+					RowCount++;
+				}
+			};
+
+			if (FNameSz > 0x8)
+				ProcessRowMap(*reinterpret_cast<TMap<Name16, uint8*>*>(ObjPtr + RowMapOffset));
+			else
+				ProcessRowMap(*reinterpret_cast<TMap<Name08, uint8*>*>(ObjPtr + RowMapOffset));
+
+			File << "\n  },\n";
+			File << "  \"row_count\": " << RowCount << "\n";
+			File << "}\n";
+
+			TableCount++;
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << "DataTable export error: " << e.what() << "\n";
+		}
+		catch (...)
+		{
+			std::cerr << "DataTable export: unknown error\n";
+		}
+	}
+
+	std::cerr << std::format("DataTable export: {} tables written to DataTables/\n", TableCount);
 }

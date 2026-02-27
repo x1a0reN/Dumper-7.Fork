@@ -184,33 +184,77 @@ def example_ida_import():
 
 
 # =========================================================================
-# 示例 5: 完整工作流
+# 示例 5: UE 版本指纹识别 (ue_version_detect.py)
+# =========================================================================
+
+def example_ue_version_detect():
+    """
+    无需注入，通过分析游戏 PE 二进制特征识别 UE 引擎版本。
+
+    命令行用法：
+        python ue_version_detect.py <game.exe> [--json] [--output report.txt]
+
+    Python API 用法：
+        from ue_version_detect import detect_version, format_report
+    """
+    print_header("示例 5: UE 版本指纹识别 (ue_version_detect.py)")
+
+    print("命令行用法:")
+    print('  python ue_version_detect.py "C:/Games/MyGame/Binaries/Win64/MyGame-Win64-Shipping.exe"')
+    print()
+    print("JSON 格式输出:")
+    print('  python ue_version_detect.py "C:/Games/MyGame/MyGame.exe" --json')
+    print()
+    print("输出到文件:")
+    print('  python ue_version_detect.py "C:/Games/MyGame/MyGame.exe" --output report.txt')
+    print()
+
+    print("Python API 调用:")
+    print("  from ue_version_detect import detect_version, format_report")
+    print()
+    print('  result = detect_version("path/to/game.exe")')
+    print(f'  print(f"Version: {{result.version}}, Confidence: {{result.confidence}}")')
+    print()
+    print("  # 人类可读报告")
+    print("  print(format_report(result))")
+    print()
+    print("  # 遍历检测证据")
+    print("  for e in result.evidence:")
+    print('      print(f"  [{e.method}] {e.detail} (weight={e.weight})")')
+
+
+# =========================================================================
+# 示例 6: 完整工作流
 # =========================================================================
 
 def example_full_workflow():
     """演示从 dump 到分析的完整工作流。"""
-    print_header("示例 5: 完整工作流")
+    print_header("示例 6: 完整工作流")
 
-    print("步骤 1: 注入 Dumper-7 到游戏")
+    print("步骤 1: 检测游戏 UE 版本（无需注入）")
+    print('  python ue_version_detect.py "C:/Games/MyGame/MyGame.exe"')
+    print("  -> 确定 UE 版本，选择正确的 VTableDB")
+    print()
+    print("步骤 2: 注入 Dumper-7 到游戏")
     print("  -> 生成 C:/Dumper-7/<version>/Dumpspace/ 目录")
     print()
-    print("步骤 2: 生成 VTable 数据库（需要 UE 源码）")
+    print("步骤 3: 生成 VTable 数据库（需要 UE 源码）")
     print('  python ue_vtable_db_generator.py "D:/UE/UnrealEngine-4.26" --version 4.26')
     print("  -> 生成 Tools/vtable_db/4.26.json")
     print("  -> 复制到 Dumpspace 目录并重命名为 VTableDB.json")
     print()
-    print("步骤 3: 在 IDA 中导入符号")
+    print("步骤 4: 在 IDA 中导入符号")
     print("  IDA: File -> Script file -> import_dumper7_dumpspace.py")
     print("  -> 选择 FunctionsInfo.json")
     print()
-    print("步骤 4: 在 CE 中加载符号")
+    print("步骤 5: 在 CE 中加载符号")
     print("  CE: Table -> Execute Script -> 打开 Dumpspace/ce_symbols.lua")
     print("  -> 加载所有函数、结构体、枚举符号")
     print()
-    print("步骤 5: 对比 UE 源码（识别游戏自定义成员）")
+    print("步骤 6: 对比 UE 源码（识别游戏自定义成员）")
     print('  python ue_source_compare.py "D:/UE/UnrealEngine-4.26" "C:/Dumper-7/v1.0/Dumpspace"')
     print()
-    print("步骤 6: 游戏更新后对比 SDK 差异")
+    print("步骤 7: 游戏更新后对比 SDK 差异")
     print('  python sdk_diff.py "C:/Dumper-7/v1.0/Dumpspace" "C:/Dumper-7/v1.1/Dumpspace"')
 
 
@@ -226,6 +270,7 @@ def main():
     example_ue_source_compare()
     example_vtable_db_generator()
     example_ida_import()
+    example_ue_version_detect()
     example_full_workflow()
 
     print(f"\n{'=' * 70}")
@@ -233,6 +278,7 @@ def main():
     print("  python sdk_diff.py --help")
     print("  python ue_source_compare.py --help")
     print("  python ue_vtable_db_generator.py --help")
+    print("  python ue_version_detect.py --help")
     print(f"{'=' * 70}")
 
 

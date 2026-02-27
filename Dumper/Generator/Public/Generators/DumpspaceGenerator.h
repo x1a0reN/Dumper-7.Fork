@@ -58,6 +58,7 @@ private:
     static void GeneratedStaticOffsets();
     static void GenerateVTableInfo(const fs::path& OutputDir);
     static void GenerateCESymbols(const fs::path& OutputDir);
+    static void GenerateDataTables(const fs::path& DumperFolder);
 
 public:
     static void Generate();
