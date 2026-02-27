@@ -327,19 +327,65 @@ void Off::InSDK::PostRender::InitPostRender_Windows()
 								PostRenderResolved = jmpTarget;
 						}
 
-						// Secondary verification: PostRender should CALL/JMP to DrawTransition.
+						// Secondary verification: PostRender should call DrawTransition.
+						// DrawTransition is virtual, so the compiler typically emits an
+						// indirect vtable call/jmp:  FF 90 disp32  (CALL [RAX+disp32])
+						//                        or  FF A0 disp32  (JMP  [RAX+disp32])
+						// We also check direct E8/E9 in case LTO devirtualized it.
 						bool bVerified = false;
-						for (int32_t i = 0; i < 0x200 - 5; i++)
-						{
-							const uint8_t opcode = PostRenderResolved[i];
+						const int32_t DrawTransitionVtOff = DrawTransitionIdx * 8;
 
-							// E8 = CALL rel32, E9 = JMP rel32
-							if (opcode == 0xE8 || opcode == 0xE9)
+						for (int32_t i = 0; i < 0x100; i++)
+						{
+							// ── Check 1: direct CALL/JMP rel32 (devirtualized) ──
+							if (PostRenderResolved[i] == 0xE8 || PostRenderResolved[i] == 0xE9)
 							{
 								const int32_t callDisp = *reinterpret_cast<const int32_t*>(&PostRenderResolved[i + 1]);
 								const uint8_t* callTarget = &PostRenderResolved[i + 5] + callDisp;
 
 								if (callTarget == reinterpret_cast<const uint8_t*>(DrawTransitionPtr))
+								{
+									bVerified = true;
+									break;
+								}
+							}
+
+							// ── Check 2: indirect vtable CALL/JMP [reg+disp] ──
+							// Skip optional REX prefix (0x40-0x4F)
+							int32_t j = i;
+							if ((PostRenderResolved[j] & 0xF0) == 0x40)
+								j++;
+
+							if (PostRenderResolved[j] != 0xFF)
+								continue;
+
+							const uint8_t modrm = PostRenderResolved[j + 1];
+							const uint8_t mod = (modrm >> 6) & 0x3;
+							const uint8_t reg = (modrm >> 3) & 0x7;
+							const uint8_t rm  = modrm & 0x7;
+
+							// reg=2 → CALL, reg=4 → JMP (tail-call optimization)
+							if (reg != 2 && reg != 4)
+								continue;
+
+							// Skip SIB (rm=4) and RIP-relative (mod=0,rm=5)
+							if (rm == 4 || (mod == 0 && rm == 5))
+								continue;
+
+							if (mod == 2) // [reg + disp32]
+							{
+								const int32_t disp = *reinterpret_cast<const int32_t*>(&PostRenderResolved[j + 2]);
+								if (disp == DrawTransitionVtOff)
+								{
+									bVerified = true;
+									break;
+								}
+							}
+							else if (mod == 1) // [reg + disp8]
+							{
+								const int8_t disp = static_cast<int8_t>(PostRenderResolved[j + 2]);
+								if (disp == static_cast<int8_t>(DrawTransitionVtOff & 0xFF)
+									&& DrawTransitionVtOff >= -128 && DrawTransitionVtOff <= 127)
 								{
 									bVerified = true;
 									break;

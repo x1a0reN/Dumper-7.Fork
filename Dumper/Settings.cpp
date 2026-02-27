@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include <filesystem>
+#include <fstream>
 #include <string>
 
 #include "Unreal/UnrealObjects.h"
@@ -106,26 +107,74 @@ void Settings::InitArrayDimSizeSettings()
 	std::cerr << std::format("\nDumper-7: bUseUint8ArrayDim = {}\n", Settings::Internal::bUseUint8ArrayDim) << std::endl;
 }
 
-void Settings::Config::Load()
+static void GenerateDefaultConfig(const std::string& Path)
+{
+	std::ofstream Out(Path);
+	if (!Out.is_open())
+		return;
+
+	Out << "; Dumper-7 Configuration File (auto-generated defaults)\n";
+	Out << "; Place this file next to Dumper-7.dll, in the game directory,\n";
+	Out << "; or at C:/Dumper-7/Dumper-7.ini\n";
+	Out << "\n";
+	Out << "[Settings]\n";
+	Out << "; Namespace name used in the generated SDK (default: SDK)\n";
+	Out << "SDKNamespaceName=SDK\n";
+	Out << "\n";
+	Out << "; Delay in milliseconds before starting generation (default: 0)\n";
+	Out << "SleepTimeout=0\n";
+	Out << "\n";
+	Out << "[PostRender]\n";
+	Out << "; Manual override for vtable indices. Set to -1 for auto-detect.\n";
+	Out << "GVCPostRenderIndex=-1\n";
+	Out << "HUDPostRenderIndex=-1\n";
+}
+
+void Settings::Config::Load(void* hModule)
 {
 	namespace fs = std::filesystem;
 
-	// Try local Dumper-7.ini
+	// Resolve DLL directory from module handle
+	if (hModule)
+	{
+		char DllPath[MAX_PATH] = {};
+		if (GetModuleFileNameA(static_cast<HMODULE>(hModule), DllPath, MAX_PATH) > 0)
+		{
+			DllDirectory = fs::path(DllPath).parent_path().string();
+		}
+	}
+
+	// Search order: game dir → DLL dir → global path
 	const std::string LocalPath = (fs::current_path() / "Dumper-7.ini").string();
+	const std::string DllDirPath = DllDirectory.empty() ? std::string{} : (fs::path(DllDirectory) / "Dumper-7.ini").string();
 	const char* ConfigPath = nullptr;
 
-	if (fs::exists(LocalPath)) 
+	if (fs::exists(LocalPath))
 	{
 		ConfigPath = LocalPath.c_str();
 	}
-	else if (fs::exists(GlobalConfigPath)) // Try global path
+	else if (!DllDirPath.empty() && fs::exists(DllDirPath))
+	{
+		ConfigPath = DllDirPath.c_str();
+	}
+	else if (fs::exists(GlobalConfigPath))
 	{
 		ConfigPath = GlobalConfigPath;
 	}
 
-	// If no config found, use defaults
-	if (!ConfigPath) 
+	// No config found anywhere — generate default in DLL directory
+	if (!ConfigPath)
+	{
+		const std::string DefaultPath = DllDirectory.empty()
+			? (fs::current_path() / "Dumper-7.ini").string()
+			: (fs::path(DllDirectory) / "Dumper-7.ini").string();
+
+		GenerateDefaultConfig(DefaultPath);
+		std::cerr << "Dumper-7: Generated default config at " << DefaultPath << "\n";
 		return;
+	}
+
+	std::cerr << "Dumper-7: Loading config from " << ConfigPath << "\n";
 
 	char SDKNamespace[256] = {};
 	GetPrivateProfileStringA("Settings", "SDKNamespaceName", "SDK", SDKNamespace, sizeof(SDKNamespace), ConfigPath);

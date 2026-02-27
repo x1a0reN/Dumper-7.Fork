@@ -1605,7 +1605,7 @@ void CppGenerator::GenerateVTHookFile()
 	if (!Settings::Config::SDKNamespaceName.empty())
 		VTHookFile << std::format("namespace {}\n{{\n\n", Settings::Config::SDKNamespaceName);
 
-	// SetVirtualFunction — write counterpart to GetVirtualFunction
+	// SetVirtualFunction - write counterpart to GetVirtualFunction
 	VTHookFile << R"(namespace InSDKUtils
 {
 	template<typename FuncType>
@@ -1821,11 +1821,11 @@ void CppGenerator::GenerateVSProject(const std::vector<std::string>& AllHppFiles
 	fs::create_directories(InjectDir);
 	fs::create_directories(ProxyDir);
 
-	// ════════════════════════════════════════════════════════════════
-	// Project 1: Inject — DLL injector template
-	// ════════════════════════════════════════════════════════════════
+	// ================================================================
+	// Project 1: Inject - DLL injector template
+	// ================================================================
 
-	// ── Inject/.slnx ──
+	// -- Inject/.slnx --
 	{
 		StreamType Slnx(InjectDir / (GameName + "_Inject.slnx"));
 		Slnx << R"(<Solution>
@@ -1834,7 +1834,7 @@ void CppGenerator::GenerateVSProject(const std::vector<std::string>& AllHppFiles
 )";
 	}
 
-	// ── Inject/Main.cpp ──
+	// -- Inject/Main.cpp --
 	{
 		StreamType MainCpp(InjectDir / "Main.cpp");
 
@@ -1854,7 +1854,7 @@ void CppGenerator::GenerateVSProject(const std::vector<std::string>& AllHppFiles
 			MainCpp << "using namespace " << Settings::Config::SDKNamespaceName << ";\n\n";
 
 		// Hook globals + callback + MainThread + DllMain
-		MainCpp << R"(// ── GVC PostRender Hook ──
+		MainCpp << R"(// -- GVC PostRender Hook --
 
 using GVCPostRenderFn = void(__fastcall*)(void* /* this */, void* /* Canvas */);
 static GVCPostRenderFn OriginalGVCPostRender = nullptr;
@@ -1876,7 +1876,7 @@ void __fastcall HookedGVCPostRender(void* This, void* Canvas)
 	}
 }
 
-// ── Main Thread ──
+// -- Main Thread --
 
 DWORD MainThread(HMODULE Module)
 {
@@ -1890,34 +1890,37 @@ DWORD MainThread(HMODULE Module)
 	// Hook GVC PostRender if the vtable index was detected during SDK generation
 	if constexpr (Offsets::GVCPostRenderIdx >= 0)
 	{
+		UGameViewportClient* GVC = nullptr;
 		UWorld* World = UWorld::GetWorld();
-
-		if (World && World->OwningGameInstance)
+		if (World && World->PersistentLevel)
 		{
-			UGameViewportClient* GVC = World->OwningGameInstance->GameViewportClient;
-
-			if (GVC)
+			UWorld* OW = World->PersistentLevel->OwningWorld;
+			if (OW && OW->OwningGameInstance && OW->OwningGameInstance->LocalPlayers.Num() > 0)
 			{
-				GVCPostRenderHook = VTableHook(GVC, Offsets::GVCPostRenderIdx);
-				OriginalGVCPostRender = GVCPostRenderHook.Install<GVCPostRenderFn>(HookedGVCPostRender);
-
-				if (OriginalGVCPostRender)
-					std::cout << "[SDK] GVC PostRender hooked at index " << Offsets::GVCPostRenderIdx << "\n";
-				else
-					std::cout << "[SDK] Failed to hook GVC PostRender (VirtualProtect failed)\n";
+				ULocalPlayer* LP = OW->OwningGameInstance->LocalPlayers[0];
+				if (LP) GVC = LP->ViewportClient;
 			}
+		}
+
+		if (GVC)
+		{
+			GVCPostRenderHook = VTableHook(GVC, Offsets::GVCPostRenderIdx);
+			OriginalGVCPostRender = GVCPostRenderHook.Install<GVCPostRenderFn>(HookedGVCPostRender);
+
+			if (OriginalGVCPostRender)
+				std::cout << "[SDK] GVC PostRender hooked at index " << Offsets::GVCPostRenderIdx << "\n";
 			else
-				std::cout << "[SDK] GameViewportClient is null, hook skipped\n";
+				std::cout << "[SDK] Failed to hook GVC PostRender (VirtualProtect failed)\n";
 		}
 		else
-			std::cout << "[SDK] UWorld or GameInstance is null, hook skipped\n";
+			std::cout << "[SDK] ViewportClient is null, hook skipped\n";
 	}
 	else
 	{
 		std::cout << "[SDK] GVCPostRenderIdx not detected (-1), hook skipped\n";
 	}
 
-	// Hotkey loop — press DELETE to unload
+	// Hotkey loop - press DELETE to unload
 	while (true)
 	{
 		if (GetAsyncKeyState(VK_DELETE) & 1)
@@ -1938,7 +1941,7 @@ DWORD MainThread(HMODULE Module)
 	return 0;
 }
 
-// ── DllMain ──
+// -- DllMain --
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 {
@@ -1955,11 +1958,11 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 )";
 	}
 
-	// ════════════════════════════════════════════════════════════════
-	// Project 2: Proxy — version.dll hijack template (no injector needed)
-	// ════════════════════════════════════════════════════════════════
+	// ================================================================
+	// Project 2: Proxy - version.dll hijack template (no injector needed)
+	// ================================================================
 
-	// ── Proxy/.slnx ──
+	// -- Proxy/.slnx --
 	{
 		StreamType Slnx(ProxyDir / (GameName + "_Proxy.slnx"));
 		Slnx << R"(<Solution>
@@ -1968,7 +1971,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 )";
 	}
 
-	// ── Proxy/Main.cpp ──
+	// -- Proxy/Main.cpp --
 	{
 		StreamType ProxyCpp(ProxyDir / "Main.cpp");
 
@@ -1987,8 +1990,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 			ProxyCpp << "using namespace " << Settings::Config::SDKNamespaceName << ";\n\n";
 
 		// Part 2: version.dll proxy infrastructure
-		ProxyCpp << R"(// ════════════════════════════════════════════════════════════════
-// version.dll Proxy — forward all exports to the real System32 DLL
+		ProxyCpp << R"(// ================================================================
+// version.dll Proxy - forward all exports to the real System32 DLL
 //
 // Usage:
 //   1. Build this project as version.dll (change Output File in project settings)
@@ -1998,7 +2001,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 //
 // NOTE: If the game uses a different DLL for hijacking (e.g. xinput1_3.dll,
 //       d3d11.dll, winmm.dll), you'll need to adapt the exports accordingly.
-// ════════════════════════════════════════════════════════════════
+// ================================================================
 
 static HMODULE g_OriginalVersion = nullptr;
 
@@ -2055,7 +2058,7 @@ static bool LoadOriginalVersion()
 )";
 
 		// Part 3: Exported proxy functions
-		ProxyCpp << R"(// Exported proxy functions — forward to the real version.dll
+		ProxyCpp << R"(// Exported proxy functions - forward to the real version.dll
 // Each function uses __declspec(naked) to avoid stack frame overhead
 
 #define PROXY_EXPORT extern "C" __declspec(dllexport)
@@ -2114,7 +2117,7 @@ PROXY_EXPORT int WINAPI GetFileVersionInfoByHandle(int a, LPCWSTR b, DWORD c, DW
 )";
 
 		// Part 4: Hook globals + delayed hook thread + DllMain
-		ProxyCpp << R"(// ── GVC PostRender Hook (delayed — waits for UE engine initialization) ──
+		ProxyCpp << R"(// -- GVC PostRender Hook (delayed - waits for UE engine initialization) --
 
 using GVCPostRenderFn = void(__fastcall*)(void* /* this */, void* /* Canvas */);
 static GVCPostRenderFn OriginalGVCPostRender = nullptr;
@@ -2134,7 +2137,7 @@ void __fastcall HookedGVCPostRender(void* This, void* Canvas)
 	}
 }
 
-// ── Main Thread — polls until UE engine is ready, then hooks ──
+// -- Main Thread - polls until UE engine is ready, then hooks --
 
 DWORD ProxyMainThread(HMODULE Module)
 {
@@ -2145,14 +2148,13 @@ DWORD ProxyMainThread(HMODULE Module)
 
 	std::cout << "[SDK-Proxy] version.dll proxy loaded. Waiting for engine init...\n";
 
-	// ── Phase 1: Wait for UE engine to initialize ──
+	// -- Phase 1: Wait for UE engine to initialize --
 	// Proxy DLLs load BEFORE the game engine starts.
 	// We must poll until GObjects and UWorld are available.
 	// Typical wait time: 5-30 seconds depending on the game.
 
 	if constexpr (Offsets::GVCPostRenderIdx >= 0)
 	{
-		UWorld* World = nullptr;
 		UGameViewportClient* GVC = nullptr;
 
 		for (int Attempt = 0; Attempt < 600; Attempt++) // Up to 60 seconds
@@ -2165,24 +2167,19 @@ DWORD ProxyMainThread(HMODULE Module)
 
 			Sleep(100);
 
-			// Try to get UWorld — will be null until engine is fully initialized
+			// Try to get ViewportClient via LocalPlayer - will be null until engine is fully initialized
 			__try
 			{
-				World = UWorld::GetWorld();
-			}
-			__except (EXCEPTION_EXECUTE_HANDLER)
-			{
-				World = nullptr;
-			}
-
-			if (!World)
-				continue;
-
-			// UWorld exists, but GameViewportClient may not be ready yet
-			__try
-			{
-				if (World->OwningGameInstance)
-					GVC = World->OwningGameInstance->GameViewportClient;
+				UWorld* World = UWorld::GetWorld();
+				if (World && World->PersistentLevel)
+				{
+					UWorld* OW = World->PersistentLevel->OwningWorld;
+					if (OW && OW->OwningGameInstance && OW->OwningGameInstance->LocalPlayers.Num() > 0)
+					{
+						ULocalPlayer* LP = OW->OwningGameInstance->LocalPlayers[0];
+						if (LP) GVC = LP->ViewportClient;
+					}
+				}
 			}
 			__except (EXCEPTION_EXECUTE_HANDLER)
 			{
@@ -2195,12 +2192,12 @@ DWORD ProxyMainThread(HMODULE Module)
 
 		if (!GVC)
 		{
-			std::cout << "[SDK-Proxy] Timed out waiting for GameViewportClient.\n";
+			std::cout << "[SDK-Proxy] Timed out waiting for ViewportClient.\n";
 			std::cout << "[SDK-Proxy] Press DELETE to unload.\n";
 			goto hotkey_loop;
 		}
 
-		// ── Phase 2: Engine is ready — install hook ──
+		// -- Phase 2: Engine is ready - install hook --
 		std::cout << "[SDK-Proxy] Engine initialized. Installing PostRender hook...\n";
 
 		GVCPostRenderHook = VTableHook(GVC, Offsets::GVCPostRenderIdx);
@@ -2238,7 +2235,7 @@ cleanup:
 	return 0;
 }
 
-// ── DllMain ──
+// -- DllMain --
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 {
@@ -2262,7 +2259,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 )";
 	}
 
-	// ── Helper: Write .vcxproj for a project subdirectory ──
+	// -- Helper: Write .vcxproj for a project subdirectory --
 	// Both projects reference shared SDK files via ..\ relative paths
 	auto WriteVcxproj = [&](const fs::path& Dir, const std::string& ProjName, const std::string& Guid, const std::string& TargetNameOverride)
 	{
@@ -2317,7 +2314,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 			Vcxproj << "  </PropertyGroup>\n\n";
 		}
 
-		// Compiler settings — AdditionalIncludeDirectories points to parent so SDK/ includes work
+		// Compiler settings - AdditionalIncludeDirectories points to parent so SDK/ includes work
 		Vcxproj << R"(  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -2338,28 +2335,13 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 
 )";
 
-		// ClCompile items — Main.cpp + Basic.cpp + CoreUObject_functions.cpp active
+		// ClCompile items - only Main.cpp and Basic.cpp; add more SDK files as needed
 		Vcxproj << "  <ItemGroup>\n";
 		Vcxproj << "    <ClCompile Include=\"Main.cpp\" />\n";
 		Vcxproj << "    <ClCompile Include=\"..\\SDK\\Basic.cpp\" />\n";
-
-		for (const std::string& CppFile : AllCppFiles)
-		{
-			if (CppFile.find("Basic.cpp") != std::string::npos)
-				continue;
-
-			if (CppFile.find("CoreUObject_functions.cpp") != std::string::npos)
-			{
-				Vcxproj << "    <ClCompile Include=\"..\\SDK\\" << CppFile << "\" />\n";
-				continue;
-			}
-
-			Vcxproj << "    <!-- <ClCompile Include=\"..\\SDK\\" << CppFile << "\" /> -->\n";
-		}
-
 		Vcxproj << "  </ItemGroup>\n\n";
 
-		// ClInclude items — top-level files via ..\, SDK files via ..\SDK\
+		// ClInclude items - top-level headers only
 		Vcxproj << "  <ItemGroup>\n";
 		Vcxproj << "    <ClInclude Include=\"..\\SDK.hpp\" />\n";
 		Vcxproj << "    <ClInclude Include=\"..\\PropertyFixup.hpp\" />\n";
@@ -2367,18 +2349,52 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved)
 		Vcxproj << "    <ClInclude Include=\"..\\NameCollisions.inl\" />\n";
 		Vcxproj << "    <ClInclude Include=\"..\\UtfN.hpp\" />\n";
 		Vcxproj << "    <ClInclude Include=\"..\\VTHook.hpp\" />\n";
-
-		if constexpr (Settings::Debug::bGenerateAssertionFile)
-			Vcxproj << "    <ClInclude Include=\"..\\Assertions.inl\" />\n";
-
-		for (const std::string& HppFile : AllHppFiles)
-		{
-			Vcxproj << "    <ClInclude Include=\"..\\SDK\\" << HppFile << "\" />\n";
-		}
-
 		Vcxproj << "  </ItemGroup>\n\n";
 
 		Vcxproj << R"(  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+</Project>
+)";
+
+		// Generate .vcxproj.filters to organize files into folders in Solution Explorer
+		StreamType Filters(Dir / (ProjName + ".vcxproj.filters"));
+
+		Filters << R"(<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <ItemGroup>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="..\SDK\Basic.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClInclude Include="..\SDK.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\PropertyFixup.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\UnrealContainers.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NameCollisions.inl">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\UtfN.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\VTHook.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+  </ItemGroup>
 
 </Project>
 )";

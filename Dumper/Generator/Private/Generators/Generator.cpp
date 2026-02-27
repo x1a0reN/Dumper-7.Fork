@@ -106,9 +106,15 @@ bool Generator::SetupDumperFolder()
 		{
 			fs::path Old = DumperFolder.generic_string() + "_OLD";
 
-			fs::remove_all(Old);
+			std::error_code ec;
+			fs::remove_all(Old, ec);
+			fs::rename(DumperFolder, Old, ec);
 
-			fs::rename(DumperFolder, Old);
+			if (ec)
+			{
+				/* rename failed (locked by Explorer / AV / etc.) — clear in-place instead */
+				fs::remove_all(DumperFolder, ec);
+			}
 		}
 
 		fs::create_directories(DumperFolder);
@@ -144,9 +150,14 @@ bool Generator::SetupFolders(std::string& FolderName, fs::path& OutFolder, std::
 		{
 			fs::path Old = OutFolder.generic_string() + "_OLD";
 
-			fs::remove_all(Old);
+			std::error_code ec;
+			fs::remove_all(Old, ec);
+			fs::rename(OutFolder, Old, ec);
 
-			fs::rename(OutFolder, Old);
+			if (ec)
+			{
+				fs::remove_all(OutFolder, ec);
+			}
 		}
 
 		fs::create_directories(OutFolder);

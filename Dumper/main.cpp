@@ -27,7 +27,7 @@ DWORD MainThread(HMODULE Module)
 
 	std::cerr << "Started Generation [Dumper-7]!\n";
 
-	Settings::Config::Load();
+	Settings::Config::Load(Module);
 
 	if (Settings::Config::SleepTimeout > 0)
 	{

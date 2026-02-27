@@ -1,4 +1,11 @@
-"""
+#pragma once
+
+// Auto-generated from Tools/import_dumper7_dumpspace.py
+// Do not edit manually. Update the .py file and regenerate.
+// Split into multiple raw string literals to stay under MSVC 16380-char limit.
+
+inline const char EMBEDDED_IDA_DUMPSPACE_SCRIPT[] =
+R"PY0("""
 Dumper-7 Dumpspace importer for IDA.
 
 Purpose:
@@ -497,7 +504,8 @@ class Dumper7IdaImporter:
 
         if offsets_json:
             self.log("Importing offsets...")
-            self._import_offsets(offsets_json.get("data", []))
+)PY0"
+R"PY1(            self._import_offsets(offsets_json.get("data", []))
 
         self._print_summary()
         return self.stats
@@ -862,7 +870,8 @@ class Dumper7IdaImporter:
             if rc != 0:
                 # If the preferred name failed, try a fallback name once.
                 fallback_name = self._unique_name(f"{member_name}_m", used_names)
-                rc = idc.add_struc_member(sid, fallback_name, member.offset, flags, -1, nbytes)
+)PY1"
+R"PY2(                rc = idc.add_struc_member(sid, fallback_name, member.offset, flags, -1, nbytes)
                 if rc != 0:
                     continue
                 member_name = fallback_name
@@ -1211,7 +1220,8 @@ class Dumper7IdaImporter:
             name = ida_segment.get_segm_name(seg) or ""
             if name:
                 names.add(name)
-        return names
+)PY2"
+R"PY3(        return names
 
     def _next_symbol_index_segment_name(self) -> str:
         names = self._existing_segment_name_set()
@@ -1470,3 +1480,4 @@ def main(dumpspace_dir: Optional[str] = None) -> Optional[ImportStats]:
 
 if __name__ == "__main__":
     main()
+)PY3";

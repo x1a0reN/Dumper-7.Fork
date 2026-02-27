@@ -21,8 +21,9 @@ namespace Settings
 	{
 		inline int SleepTimeout = 0;
 		inline std::string SDKNamespaceName = "SDK";
+		inline std::string DllDirectory;
 
-		void Load();
+		void Load(void* hModule = nullptr);
 	};
 
 	namespace PostRender

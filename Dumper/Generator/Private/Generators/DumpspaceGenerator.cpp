@@ -1,4 +1,7 @@
 #include "Generators/DumpspaceGenerator.h"
+#include "Generators/EmbeddedIdaScript.h"
+
+#include <fstream>
 
 std::string DumpspaceGenerator::GetStructPrefixedName(const StructWrapper& Struct)
 {
@@ -520,4 +523,10 @@ void DumpspaceGenerator::Generate()
 	}
 
 	DSGen::dump();
+
+	// Write the IDAPython importer script into the Dumpspace output directory
+	{
+		StreamType ScriptFile(MainFolder / "import_dumper7_dumpspace.py");
+		ScriptFile << EMBEDDED_IDA_DUMPSPACE_SCRIPT;
+	}
 }
