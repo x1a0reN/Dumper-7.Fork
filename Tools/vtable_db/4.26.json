@@ -6,7 +6,7 @@
       "parent": null,
       "base_index": 0,
       "own_count": 3,
-      "total_slots": 4,
+      "total_slots": 3,
       "functions": [
         [
           0,
@@ -14,12 +14,12 @@
           true
         ],
         [
-          2,
+          1,
           "RegisterDependencies",
           false
         ],
         [
-          3,
+          2,
           "DeferredRegister",
           false
         ]
@@ -27,27 +27,27 @@
     },
     "UObjectBaseUtility": {
       "parent": "UObjectBase",
-      "base_index": 4,
+      "base_index": 3,
       "own_count": 4,
-      "total_slots": 8,
+      "total_slots": 7,
       "functions": [
         [
-          4,
+          3,
           "CanBeClusterRoot",
           false
         ],
         [
-          5,
+          4,
           "CanBeInCluster",
           false
         ],
         [
-          6,
+          5,
           "CreateCluster",
           false
         ],
         [
-          7,
+          6,
           "OnClusterMarkedAsPendingKill",
           false
         ]
@@ -55,68 +55,73 @@
     },
     "UObject": {
       "parent": "UObjectBaseUtility",
-      "base_index": 8,
-      "own_count": 72,
-      "total_slots": 80,
+      "base_index": 7,
+      "own_count": 70,
+      "total_slots": 77,
       "functions": [
         [
-          8,
+          7,
           "GetDetailedInfoInternal",
           false
         ],
         [
-          9,
+          8,
           "PostInitProperties",
           false
         ],
         [
-          10,
+          9,
           "PostCDOContruct",
           false
         ],
         [
-          11,
+          10,
           "PreSaveRoot",
           false
         ],
         [
-          12,
+          11,
           "PostSaveRoot",
           false
         ],
         [
-          13,
+          12,
           "PreSave",
           false
         ],
         [
-          14,
+          13,
           "IsReadyForAsyncPostLoad",
           false
         ],
         [
-          15,
+          14,
           "PostLoad",
           false
         ],
         [
-          16,
+          15,
           "PostLoadSubobjects",
           false
         ],
         [
-          17,
+          16,
           "BeginDestroy",
           false
         ],
         [
-          18,
+          17,
           "IsReadyForFinishDestroy",
           false
         ],
         [
-          19,
+          18,
           "FinishDestroy",
+          false
+        ],
+        [
+          19,
+          "Serialize",
           false
         ],
         [
@@ -126,27 +131,27 @@
         ],
         [
           21,
-          "Serialize",
-          false
-        ],
-        [
-          22,
           "ShutdownAfterError",
           false
         ],
         [
-          23,
+          22,
           "PostInterpChange",
           false
         ],
         [
-          24,
+          23,
           "PostRename",
           false
         ],
         [
-          25,
+          24,
           "PreDuplicate",
+          false
+        ],
+        [
+          25,
+          "PostDuplicate",
           false
         ],
         [
@@ -156,266 +161,251 @@
         ],
         [
           27,
-          "PostDuplicate",
-          false
-        ],
-        [
-          28,
           "NeedsLoadForClient",
           false
         ],
         [
-          29,
+          28,
           "NeedsLoadForServer",
           false
         ],
         [
-          30,
+          29,
           "NeedsLoadForTargetPlatform",
           false
         ],
         [
-          31,
+          30,
           "NeedsLoadForEditorGame",
           false
         ],
         [
-          32,
+          31,
           "IsEditorOnly",
           false
         ],
         [
-          33,
+          32,
           "IsPostLoadThreadSafe",
           false
         ],
         [
-          34,
+          33,
           "IsDestructionThreadSafe",
           false
         ],
         [
-          35,
+          34,
           "GetPreloadDependencies",
           false
         ],
         [
-          36,
+          35,
           "GetPrestreamPackages",
           false
         ],
         [
-          37,
+          36,
           "ExportCustomProperties",
           false
         ],
         [
-          38,
+          37,
           "ImportCustomProperties",
           false
         ],
         [
-          39,
+          38,
           "PostEditImport",
           false
         ],
         [
-          40,
+          39,
           "PostReloadConfig",
           false
         ],
         [
-          41,
+          40,
           "Rename",
           false
         ],
         [
-          42,
+          41,
           "GetDesc",
           false
         ],
         [
-          43,
+          42,
           "GetSparseClassDataStruct",
           false
         ],
         [
-          44,
+          43,
           "GetWorld",
           false
         ],
         [
-          45,
+          44,
           "GetNativePropertyValues",
           false
         ],
         [
-          46,
+          45,
           "GetResourceSizeEx",
           false
         ],
         [
-          47,
+          46,
           "GetExporterName",
           false
         ],
         [
-          48,
+          47,
           "GetRestoreForUObjectOverwrite",
           false
         ],
         [
-          49,
+          48,
           "AreNativePropertiesIdenticalTo",
           false
         ],
         [
-          50,
+          49,
           "GetAssetRegistryTags",
           false
         ],
         [
-          51,
+          50,
           "IsAsset",
           false
         ],
         [
-          52,
+          51,
           "GetPrimaryAssetId",
           false
         ],
         [
-          53,
+          52,
           "IsLocalizedResource",
           false
         ],
         [
-          54,
+          53,
           "IsSafeForRootSet",
           false
         ],
         [
-          55,
+          54,
           "TagSubobjects",
           false
         ],
         [
-          56,
+          55,
           "GetLifetimeReplicatedProps",
           false
         ],
         [
-          57,
+          56,
           "IsNameStableForNetworking",
           false
         ],
         [
-          58,
+          57,
           "IsFullNameStableForNetworking",
           false
         ],
         [
-          59,
+          58,
           "IsSupportedForNetworking",
           false
         ],
         [
-          60,
+          59,
           "GetSubobjectsWithStableNamesForNetworking",
           false
         ],
         [
-          61,
+          60,
           "PreNetReceive",
           false
         ],
         [
-          62,
+          61,
           "PostNetReceive",
           false
         ],
         [
-          63,
+          62,
           "PostRepNotifies",
           false
         ],
         [
-          64,
+          63,
           "PreDestroyFromReplication",
           false
         ],
         [
-          65,
-          "IsSelected",
-          false
-        ],
-        [
-          66,
+          64,
           "BuildSubobjectMapping",
           false
         ],
         [
-          67,
+          65,
           "GetConfigOverridePlatform",
           false
         ],
         [
-          68,
+          66,
           "OverridePerObjectConfigSection",
           false
         ],
         [
-          69,
+          67,
           "ProcessEvent",
           false
         ],
         [
-          70,
+          68,
           "GetFunctionCallspace",
           false
         ],
         [
-          71,
+          69,
           "CallRemoteFunction",
           false
         ],
         [
-          72,
-          "like",
-          false
-        ],
-        [
-          73,
+          70,
           "ProcessConsoleExec",
           false
         ],
         [
-          74,
+          71,
           "RegenerateClass",
           false
         ],
         [
-          75,
+          72,
           "MarkAsEditorOnlySubobject",
           false
         ],
         [
-          76,
+          73,
           "CheckDefaultSubobjectsInternal",
           false
         ],
         [
-          77,
+          74,
           "ValidateGeneratedRepEnums",
           false
         ],
         [
-          78,
+          75,
           "SetNetPushIdDynamic",
           false
         ],
         [
-          79,
+          76,
           "GetNetPushIdDynamic",
           false
         ]
@@ -423,820 +413,810 @@
     },
     "AActor": {
       "parent": "UObject",
-      "base_index": 80,
-      "own_count": 123,
-      "total_slots": 203,
+      "base_index": 77,
+      "own_count": 121,
+      "total_slots": 198,
       "functions": [
         [
-          80,
+          77,
           "OnRep_ReplicateMovement",
           false
         ],
         [
-          81,
+          78,
           "TearOff",
           false
         ],
         [
-          82,
+          79,
           "HasNetOwner",
           false
         ],
         [
-          83,
+          80,
           "HasLocalNetOwner",
           false
         ],
         [
-          84,
+          81,
           "OnRep_Owner",
           false
         ],
         [
-          85,
+          82,
           "SetReplicateMovement",
           false
         ],
         [
-          86,
+          83,
           "OnRep_AttachmentReplication",
           false
         ],
         [
-          87,
+          84,
           "IsReplicationPausedForConnection",
           false
         ],
         [
-          88,
+          85,
           "OnReplicationPausedChanged",
           false
         ],
         [
-          89,
+          86,
           "ReplicateSubobjects",
           false
         ],
         [
-          90,
+          87,
           "OnSubobjectCreatedFromReplication",
           false
         ],
         [
-          91,
+          88,
           "OnSubobjectDestroyFromReplication",
           false
         ],
         [
-          92,
+          89,
           "PreReplication",
           false
         ],
         [
-          93,
+          90,
           "PreReplicationForReplay",
           false
         ],
         [
-          94,
+          91,
           "RewindForReplay",
           false
         ],
         [
-          95,
+          92,
           "OnRep_Instigator",
           false
         ],
         [
-          96,
+          93,
           "EnableInput",
           false
         ],
         [
-          97,
+          94,
           "DisableInput",
           false
         ],
         [
-          98,
+          95,
           "GetVelocity",
           false
         ],
         [
-          99,
+          96,
           "SetActorHiddenInGame",
           false
         ],
         [
-          100,
+          97,
           "K2_DestroyActor",
           false
         ],
         [
-          101,
+          98,
           "AddTickPrerequisiteActor",
           false
         ],
         [
-          102,
+          99,
           "AddTickPrerequisiteComponent",
           false
         ],
         [
-          103,
+          100,
           "RemoveTickPrerequisiteActor",
           false
         ],
         [
-          104,
+          101,
           "RemoveTickPrerequisiteComponent",
           false
         ],
         [
-          105,
+          102,
           "BeginPlay",
           false
         ],
         [
-          106,
+          103,
           "EndPlay",
           false
         ],
         [
-          107,
+          104,
           "NotifyActorBeginOverlap",
           false
         ],
         [
-          108,
+          105,
           "NotifyActorEndOverlap",
           false
         ],
         [
-          109,
+          106,
           "NotifyActorBeginCursorOver",
           false
         ],
         [
-          110,
+          107,
           "NotifyActorEndCursorOver",
           false
         ],
         [
-          111,
+          108,
           "NotifyActorOnClicked",
           false
         ],
         [
-          112,
+          109,
           "NotifyActorOnReleased",
           false
         ],
         [
-          113,
+          110,
           "NotifyActorOnInputTouchBegin",
           false
         ],
         [
-          114,
+          111,
           "NotifyActorOnInputTouchEnd",
           false
         ],
         [
-          115,
+          112,
           "NotifyActorOnInputTouchEnter",
           false
         ],
         [
-          116,
+          113,
           "NotifyActorOnInputTouchLeave",
           false
         ],
         [
-          117,
+          114,
           "NotifyHit",
           false
         ],
         [
-          118,
+          115,
           "SetLifeSpan",
           false
         ],
         [
-          119,
+          116,
           "GetLifeSpan",
           false
         ],
         [
-          120,
+          117,
           "GatherCurrentMovement",
           false
         ],
         [
-          121,
+          118,
           "GetDefaultAttachComponent",
           false
         ],
         [
-          122,
+          119,
           "ApplyWorldOffset",
           false
         ],
         [
-          123,
+          120,
           "IsLevelBoundsRelevant",
           false
         ],
         [
-          124,
+          121,
           "GetNetPriority",
           false
         ],
         [
-          125,
+          122,
           "GetReplayPriority",
           false
         ],
         [
-          126,
+          123,
           "GetNetDormancy",
           false
         ],
         [
-          127,
+          124,
           "OnActorChannelOpen",
           false
         ],
         [
-          128,
+          125,
           "UseShortConnectTimeout",
           false
         ],
         [
-          129,
+          126,
           "OnSerializeNewActor",
           false
         ],
         [
-          130,
+          127,
           "OnNetCleanup",
           false
         ],
         [
-          131,
+          128,
           "TickActor",
           false
         ],
         [
-          132,
+          129,
           "PostActorCreated",
           false
         ],
         [
-          133,
+          130,
           "LifeSpanExpired",
           false
         ],
         [
-          134,
+          131,
           "PostNetReceiveRole",
           false
         ],
         [
-          135,
+          132,
           "PostNetInit",
           false
         ],
         [
-          136,
+          133,
           "OnRep_ReplicatedMovement",
           false
         ],
         [
-          137,
+          134,
           "PostNetReceiveLocationAndRotation",
           false
         ],
         [
-          138,
+          135,
           "PostNetReceiveVelocity",
           false
         ],
         [
-          139,
+          136,
           "PostNetReceivePhysicState",
           false
         ],
         [
-          140,
+          137,
           "SetOwner",
           false
         ],
         [
-          141,
+          138,
           "CheckStillInWorld",
           false
         ],
         [
-          142,
+          139,
           "Tick",
           false
         ],
         [
-          143,
+          140,
           "ShouldTickIfViewportsOnly",
           false
         ],
         [
-          144,
+          141,
           "IsNetRelevantFor",
           false
         ],
         [
-          145,
+          142,
           "IsReplayRelevantFor",
           false
         ],
         [
-          146,
+          143,
           "IsRelevancyOwnerFor",
           false
         ],
         [
-          147,
+          144,
           "PreInitializeComponents",
           false
         ],
         [
-          148,
+          145,
           "PostInitializeComponents",
           false
         ],
         [
-          149,
+          146,
           "DispatchPhysicsCollisionHit",
           false
         ],
         [
-          150,
+          147,
           "GetNetOwner",
           false
         ],
         [
-          151,
+          148,
           "GetNetOwningPlayer",
           false
         ],
         [
-          152,
+          149,
           "GetNetConnection",
           false
         ],
         [
-          153,
+          150,
           "DestroyNetworkActorHandled",
           false
         ],
         [
-          154,
+          151,
           "RegisterAllComponents",
           false
         ],
         [
-          155,
+          152,
           "PreRegisterAllComponents",
           false
         ],
         [
-          156,
+          153,
           "PostRegisterAllComponents",
           false
         ],
         [
-          157,
+          154,
           "UnregisterAllComponents",
           false
         ],
         [
-          158,
+          155,
           "PostUnregisterAllComponents",
           false
         ],
         [
-          159,
+          156,
           "ReregisterAllComponents",
           false
         ],
         [
-          160,
+          157,
           "MarkComponentsAsPendingKill",
           false
         ],
         [
-          161,
+          158,
           "InvalidateLightingCacheDetailed",
           false
         ],
         [
-          162,
+          159,
           "TeleportTo",
           false
         ],
         [
-          163,
+          160,
           "TeleportSucceeded",
           false
         ],
         [
-          164,
+          161,
           "ClearCrossLevelReferences",
           false
         ],
         [
-          165,
-          "unknown",
-          false
-        ],
-        [
-          166,
+          162,
           "IsBasedOnActor",
           false
         ],
         [
-          167,
+          163,
           "IsAttachedTo",
           false
         ],
         [
-          168,
+          164,
           "RerunConstructionScripts",
           false
         ],
         [
-          169,
+          165,
           "OnConstruction",
           false
         ],
         [
-          170,
+          166,
           "RegisterActorTickFunctions",
           false
         ],
         [
-          171,
+          167,
           "Destroyed",
           false
         ],
         [
-          172,
+          168,
           "FellOutOfWorld",
           false
         ],
         [
-          173,
+          169,
           "OutsideWorldBounds",
           false
         ],
         [
-          174,
+          170,
           "GetComponentsBoundingBox",
           false
         ],
         [
-          175,
+          171,
           "CalculateComponentsBoundingBoxInLocalSpace",
           false
         ],
         [
-          176,
+          172,
           "GetComponentsBoundingCylinder",
           false
         ],
         [
-          177,
+          173,
           "GetSimpleCollisionCylinder",
           false
         ],
         [
-          178,
+          174,
           "IsRootComponentCollisionRegistered",
           false
         ],
         [
-          179,
+          175,
           "TornOff",
           false
         ],
         [
-          180,
+          176,
           "GetComponentsCollisionResponseToChannel",
           false
         ],
         [
-          181,
+          177,
           "CanBeBaseForCharacter",
           false
         ],
         [
-          182,
+          178,
           "TakeDamage",
           false
         ],
         [
-          183,
+          179,
           "InternalTakeRadialDamage",
           false
         ],
         [
-          184,
+          180,
           "InternalTakePointDamage",
           false
         ],
         [
-          185,
+          181,
           "BecomeViewTarget",
           false
         ],
         [
-          186,
+          182,
           "EndViewTarget",
           false
         ],
         [
-          187,
+          183,
           "CalcCamera",
           false
         ],
         [
-          188,
+          184,
           "HasActiveCameraComponent",
           false
         ],
         [
-          189,
+          185,
           "HasActivePawnControlCameraComponent",
           false
         ],
         [
-          190,
+          186,
           "GetHumanReadableName",
           false
         ],
         [
-          191,
+          187,
           "Reset",
           false
         ],
         [
-          192,
+          188,
           "GetLastRenderTime",
           false
         ],
         [
-          193,
+          189,
           "ForceNetRelevant",
           false
         ],
         [
-          194,
+          190,
           "ForceNetUpdate",
           false
         ],
         [
-          195,
+          191,
           "PrestreamTextures",
           false
         ],
         [
-          196,
+          192,
           "GetActorEyesViewPoint",
           false
         ],
         [
-          197,
+          193,
           "GetTargetLocation",
           false
         ],
         [
-          198,
+          194,
           "PostRenderFor",
           false
         ],
         [
-          199,
+          195,
           "FindComponentByClass",
           false
         ],
         [
-          200,
+          196,
           "IsComponentRelevantForNavigation",
           false
         ],
         [
-          201,
+          197,
           "DisplayDebug",
-          false
-        ],
-        [
-          202,
-          "SetHidden",
           false
         ]
       ]
     },
     "APawn": {
       "parent": "AActor",
-      "base_index": 203,
+      "base_index": 198,
       "own_count": 38,
-      "total_slots": 241,
+      "total_slots": 236,
       "functions": [
         [
-          203,
+          198,
           "GetMovementComponent",
           false
         ],
         [
-          204,
+          199,
           "GetMovementBase",
           false
         ],
         [
-          205,
+          200,
           "GetPawnNoiseEmitterComponent",
           false
         ],
         [
-          206,
+          201,
           "TurnOff",
           false
         ],
         [
-          207,
+          202,
           "Restart",
           false
         ],
         [
-          208,
+          203,
           "PawnStartFire",
           false
         ],
         [
-          209,
+          204,
           "UnPossessed",
           false
         ],
         [
-          210,
+          205,
           "GetPawnPhysicsVolume",
           false
         ],
         [
-          211,
+          206,
           "ReachedDesiredRotation",
           false
         ],
         [
-          212,
+          207,
           "GetDefaultHalfHeight",
           false
         ],
         [
-          213,
+          208,
           "OnRep_Controller",
           false
         ],
         [
-          214,
+          209,
           "OnRep_PlayerState",
           false
         ],
         [
-          215,
+          210,
           "UpdateNavigationRelevance",
           false
         ],
         [
-          216,
+          211,
           "ShouldTakeDamage",
           false
         ],
         [
-          217,
+          212,
           "SetPlayerDefaults",
           false
         ],
         [
-          218,
+          213,
           "RecalculateBaseEyeHeight",
           false
         ],
         [
-          219,
+          214,
           "PossessedBy",
           false
         ],
         [
-          220,
+          215,
           "IsLocallyControlled",
           false
         ],
         [
-          221,
+          216,
           "IsPlayerControlled",
           false
         ],
         [
-          222,
+          217,
           "IsBotControlled",
           false
         ],
         [
-          223,
+          218,
           "GetViewRotation",
           false
         ],
         [
-          224,
+          219,
           "GetPawnViewLocation",
           false
         ],
         [
-          225,
+          220,
           "GetBaseAimRotation",
           false
         ],
         [
-          226,
+          221,
           "InFreeCam",
           false
         ],
         [
-          227,
+          222,
           "PawnClientRestart",
           false
         ],
         [
-          228,
+          223,
           "FaceRotation",
           false
         ],
         [
-          229,
+          224,
           "DetachFromControllerPendingDestroy",
           false
         ],
         [
-          230,
+          225,
           "SpawnDefaultController",
           false
         ],
         [
-          231,
+          226,
           "GetDamageInstigator",
           false
         ],
         [
-          232,
+          227,
           "CreatePlayerInputComponent",
           false
         ],
         [
-          233,
+          228,
           "DestroyPlayerInputComponent",
           false
         ],
         [
-          234,
+          229,
           "SetupPlayerInputComponent",
           false
         ],
         [
-          235,
+          230,
           "AddMovementInput",
           false
         ],
         [
-          236,
+          231,
           "ConsumeMovementInputVector",
           false
         ],
         [
-          237,
+          232,
           "AddControllerPitchInput",
           false
         ],
         [
-          238,
+          233,
           "AddControllerYawInput",
           false
         ],
         [
-          239,
+          234,
           "AddControllerRollInput",
           false
         ],
         [
-          240,
+          235,
           "IsMoveInputIgnored",
           false
         ]
@@ -1244,197 +1224,197 @@
     },
     "ACharacter": {
       "parent": "APawn",
-      "base_index": 241,
+      "base_index": 236,
       "own_count": 38,
-      "total_slots": 279,
+      "total_slots": 274,
       "functions": [
         [
-          241,
+          236,
           "SetBase",
           false
         ],
         [
-          242,
+          237,
           "CacheInitialMeshOffset",
           false
         ],
         [
-          243,
+          238,
           "OnRep_ReplicatedBasedMovement",
           false
         ],
         [
-          244,
+          239,
           "BaseChange",
           false
         ],
         [
-          245,
+          240,
           "GetBaseRotationOffset",
           false
         ],
         [
-          246,
+          241,
           "OnRep_IsCrouched",
           false
         ],
         [
-          247,
+          242,
           "NotifyActorBeginOverlap",
           false
         ],
         [
-          248,
+          243,
           "NotifyActorEndOverlap",
           false
         ],
         [
-          249,
+          244,
           "ApplyDamageMomentum",
           false
         ],
         [
-          250,
+          245,
           "Jump",
           false
         ],
         [
-          251,
+          246,
           "StopJumping",
           false
         ],
         [
-          252,
+          247,
           "CanJumpInternal_Implementation",
           false
         ],
         [
-          253,
+          248,
           "ResetJumpState",
           false
         ],
         [
-          254,
+          249,
           "IsJumpProvidingForce",
           false
         ],
         [
-          255,
+          250,
           "PlayAnimMontage",
           false
         ],
         [
-          256,
+          251,
           "StopAnimMontage",
           false
         ],
         [
-          257,
+          252,
           "LaunchCharacter",
           false
         ],
         [
-          258,
+          253,
           "OnJumped_Implementation",
           false
         ],
         [
-          259,
+          254,
           "Falling",
           false
         ],
         [
-          260,
+          255,
           "NotifyJumpApex",
           false
         ],
         [
-          261,
+          256,
           "Landed",
           false
         ],
         [
-          262,
+          257,
           "OnWalkingOffLedge_Implementation",
           false
         ],
         [
-          263,
+          258,
           "MoveBlockedBy",
           false
         ],
         [
-          264,
+          259,
           "Crouch",
           false
         ],
         [
-          265,
+          260,
           "UnCrouch",
           false
         ],
         [
-          266,
+          261,
           "CanCrouch",
           false
         ],
         [
-          267,
+          262,
           "OnEndCrouch",
           false
         ],
         [
-          268,
+          263,
           "OnStartCrouch",
           false
         ],
         [
-          269,
+          264,
           "OnMovementModeChanged",
           false
         ],
         [
-          270,
+          265,
           "ShouldNotifyLanded",
           false
         ],
         [
-          271,
+          266,
           "CheckJumpInput",
           false
         ],
         [
-          272,
+          267,
           "ClearJumpInput",
           false
         ],
         [
-          273,
+          268,
           "GetJumpMaxHoldTime",
           false
         ],
         [
-          274,
+          269,
           "ClientCheatWalk_Implementation",
           false
         ],
         [
-          275,
+          270,
           "ClientCheatFly_Implementation",
           false
         ],
         [
-          276,
+          271,
           "ClientCheatGhost_Implementation",
           false
         ],
         [
-          277,
+          272,
           "RootMotionDebugClientPrintOnScreen_Implementation",
           false
         ],
         [
-          278,
+          273,
           "OnUpdateSimulatedPosition",
           false
         ]
@@ -1442,202 +1422,202 @@
     },
     "AController": {
       "parent": "AActor",
-      "base_index": 203,
+      "base_index": 198,
       "own_count": 39,
-      "total_slots": 242,
+      "total_slots": 237,
       "functions": [
         [
-          203,
+          198,
           "AttachToPawn",
           false
         ],
         [
-          204,
+          199,
           "DetachFromPawn",
           false
         ],
         [
-          205,
+          200,
           "AddPawnTickDependency",
           false
         ],
         [
-          206,
+          201,
           "RemovePawnTickDependency",
           false
         ],
         [
-          207,
+          202,
           "ChangeState",
           false
         ],
         [
-          208,
+          203,
           "GetControlRotation",
           false
         ],
         [
-          209,
+          204,
           "SetControlRotation",
           false
         ],
         [
-          210,
+          205,
           "SetInitialLocationAndRotation",
           false
         ],
         [
-          211,
+          206,
           "LineOfSightTo",
           false
         ],
         [
-          212,
+          207,
           "OnRep_Pawn",
           false
         ],
         [
-          213,
+          208,
           "OnRep_PlayerState",
           false
         ],
         [
-          214,
+          209,
           "SetPawn",
           false
         ],
         [
-          215,
+          210,
           "GetViewTarget",
           false
         ],
         [
-          216,
+          211,
           "GetDesiredRotation",
           false
         ],
         [
-          217,
+          212,
           "IsLocalController",
           false
         ],
         [
-          218,
+          213,
           "CleanupPlayerState",
           false
         ],
         [
-          219,
+          214,
           "Possess",
           false
         ],
         [
-          220,
+          215,
           "UnPossess",
           false
         ],
         [
-          221,
+          216,
           "OnPossess",
           false
         ],
         [
-          222,
+          217,
           "OnUnPossess",
           false
         ],
         [
-          223,
+          218,
           "PawnPendingDestroy",
           false
         ],
         [
-          224,
+          219,
           "InstigatedAnyDamage",
           false
         ],
         [
-          225,
+          220,
           "InitPlayerState",
           false
         ],
         [
-          226,
+          221,
           "GameHasEnded",
           false
         ],
         [
-          227,
+          222,
           "GetPlayerViewPoint",
           false
         ],
         [
-          228,
+          223,
           "FailedToSpawnPawn",
           false
         ],
         [
-          229,
+          224,
           "StopMovement",
           false
         ],
         [
-          230,
+          225,
           "SetIgnoreMoveInput",
           false
         ],
         [
-          231,
+          226,
           "ResetIgnoreMoveInput",
           false
         ],
         [
-          232,
+          227,
           "IsMoveInputIgnored",
           false
         ],
         [
-          233,
+          228,
           "SetIgnoreLookInput",
           false
         ],
         [
-          234,
+          229,
           "ResetIgnoreLookInput",
           false
         ],
         [
-          235,
+          230,
           "IsLookInputIgnored",
           false
         ],
         [
-          236,
+          231,
           "ResetIgnoreInputFlags",
           false
         ],
         [
-          237,
+          232,
           "CurrentLevelUnloaded",
           false
         ],
         [
-          238,
+          233,
           "BeginInactiveState",
           false
         ],
         [
-          239,
+          234,
           "EndInactiveState",
           false
         ],
         [
-          240,
+          235,
           "InitNavigationControl",
           false
         ],
         [
-          241,
+          236,
           "UpdateNavigationComponents",
           false
         ]
@@ -1645,327 +1625,327 @@
     },
     "APlayerController": {
       "parent": "AController",
-      "base_index": 242,
+      "base_index": 237,
       "own_count": 64,
-      "total_slots": 306,
+      "total_slots": 301,
       "functions": [
         [
-          242,
+          237,
           "SeamlessTravelFrom",
           false
         ],
         [
-          243,
+          238,
           "PostSeamlessTravel",
           false
         ],
         [
-          244,
+          239,
           "ClientEnableNetworkVoice",
           false
         ],
         [
-          245,
+          240,
           "ToggleSpeaking",
           false
         ],
         [
-          246,
+          241,
           "ClientVoiceHandshakeComplete",
           false
         ],
         [
-          247,
+          242,
           "ServerMutePlayer",
           false
         ],
         [
-          248,
+          243,
           "ServerUnmutePlayer",
           false
         ],
         [
-          249,
+          244,
           "ClientMutePlayer",
           false
         ],
         [
-          250,
+          245,
           "ClientUnmutePlayer",
           false
         ],
         [
-          251,
+          246,
           "GetPlayerControllerForMuting",
           false
         ],
         [
-          252,
+          247,
           "IsPlayerMuted",
           false
         ],
         [
-          253,
+          248,
           "NotifyDirectorControl",
           false
         ],
         [
-          254,
+          249,
           "ConsoleKey",
           false
         ],
         [
-          255,
+          250,
           "SendToConsole",
           false
         ],
         [
-          256,
+          251,
           "NotifyActorChannelFailure",
           false
         ],
         [
-          257,
+          252,
           "UpdateHiddenActors",
           false
         ],
         [
-          258,
+          253,
           "UpdateHiddenComponents",
           false
         ],
         [
-          259,
+          254,
           "SpawnPlayerCameraManager",
           false
         ],
         [
-          260,
+          255,
           "GetAudioListenerPosition",
           false
         ],
         [
-          261,
+          256,
           "GetAudioListenerAttenuationOverridePosition",
           false
         ],
         [
-          262,
+          257,
           "ProcessPlayerInput",
           false
         ],
         [
-          263,
+          258,
           "BuildInputStack",
           false
         ],
         [
-          264,
+          259,
           "UpdateForceFeedback",
           false
         ],
         [
-          265,
+          260,
           "IsInViewportClient",
           false
         ],
         [
-          266,
+          261,
           "GetInputIndex",
           false
         ],
         [
-          267,
+          262,
           "GetAutoActivateCameraForPlayer",
           false
         ],
         [
-          268,
+          263,
           "SetupInputComponent",
           false
         ],
         [
-          269,
+          264,
           "CleanUpAudioComponents",
           false
         ],
         [
-          270,
+          265,
           "AddCheats",
           false
         ],
         [
-          271,
+          266,
           "SpawnDefaultHUD",
           false
         ],
         [
-          272,
+          267,
           "CreateTouchInterface",
           false
         ],
         [
-          273,
+          268,
           "CleanupGameViewport",
           false
         ],
         [
-          274,
+          269,
           "AcknowledgePossession",
           false
         ],
         [
-          275,
+          270,
           "PawnLeavingGame",
           false
         ],
         [
-          276,
+          271,
           "UpdatePing",
           false
         ],
         [
-          277,
+          272,
           "GetNextViewablePlayer",
           false
         ],
         [
-          278,
+          273,
           "ViewAPlayer",
           false
         ],
         [
-          279,
+          274,
           "CanRestartPlayer",
           false
         ],
         [
-          280,
+          275,
           "SetCinematicMode",
           false
         ],
         [
-          281,
+          276,
           "UpdateCameraManager",
           false
         ],
         [
-          282,
+          277,
           "ReceivedGameModeClass",
           false
         ],
         [
-          283,
+          278,
           "NotifyServerReceivedClientData",
           false
         ],
         [
-          284,
+          279,
           "StartSpectatingOnly",
           false
         ],
         [
-          285,
+          280,
           "DefaultCanUnpause",
           false
         ],
         [
-          286,
+          281,
           "SetViewTarget",
           false
         ],
         [
-          287,
+          282,
           "AutoManageActiveCameraTarget",
           false
         ],
         [
-          288,
+          283,
           "ShouldShowMouseCursor",
           false
         ],
         [
-          289,
+          284,
           "GetMouseCursor",
           false
         ],
         [
-          290,
+          285,
           "ReceivedSpectatorClass",
           false
         ],
         [
-          291,
+          286,
           "GetFocalLocation",
           false
         ],
         [
-          292,
+          287,
           "BeginSpectatingState",
           false
         ],
         [
-          293,
+          288,
           "EndSpectatingState",
           false
         ],
         [
-          294,
+          289,
           "SetSpectatorPawn",
           false
         ],
         [
-          295,
+          290,
           "SpawnSpectatorPawn",
           false
         ],
         [
-          296,
+          291,
           "DestroySpectatorPawn",
           false
         ],
         [
-          297,
+          292,
           "ShouldKeepCurrentPawnUponSpectating",
           false
         ],
         [
-          298,
+          293,
           "SetSpawnLocation",
           false
         ],
         [
-          299,
+          294,
           "ReceivedPlayer",
           false
         ],
         [
-          300,
+          295,
           "InitInputSystem",
           false
         ],
         [
-          301,
+          296,
           "IsFrozen",
           false
         ],
         [
-          302,
+          297,
           "PreClientTravel",
           false
         ],
         [
-          303,
+          298,
           "SetCameraMode",
           false
         ],
         [
-          304,
+          299,
           "ResetCameraMode",
           false
         ],
         [
-          305,
+          300,
           "SendClientAdjustment",
           false
         ]
@@ -1973,157 +1953,157 @@
     },
     "UGameViewportClient": {
       "parent": "UObject",
-      "base_index": 80,
+      "base_index": 77,
       "own_count": 30,
-      "total_slots": 111,
+      "total_slots": 107,
       "functions": [
         [
-          80,
+          77,
           "~UGameViewportClient",
           true
         ],
         [
-          82,
+          78,
           "SSSwapControllers",
           false
         ],
         [
-          83,
+          79,
           "ShowTitleSafeArea",
           false
         ],
         [
-          84,
+          80,
           "SetConsoleTarget",
           false
         ],
         [
-          85,
+          81,
           "Init",
           false
         ],
         [
-          86,
+          82,
           "FinalizeViews",
           false
         ],
         [
-          87,
+          83,
           "AddViewportWidgetContent",
           false
         ],
         [
-          88,
+          84,
           "RemoveViewportWidgetContent",
           false
         ],
         [
-          89,
+          85,
           "AddViewportWidgetForPlayer",
           false
         ],
         [
-          90,
+          86,
           "RemoveViewportWidgetForPlayer",
           false
         ],
         [
-          91,
+          87,
           "DetachViewportClient",
           false
         ],
         [
-          92,
+          88,
           "Tick",
           false
         ],
         [
-          93,
+          89,
           "SetViewportFrame",
           false
         ],
         [
-          94,
+          90,
           "SetViewport",
           false
         ],
         [
-          95,
+          91,
           "SetDropDetail",
           false
         ],
         [
-          96,
+          92,
           "ConsoleCommand",
           false
         ],
         [
-          97,
+          93,
           "GetMousePosition",
           false
         ],
         [
-          98,
+          94,
           "SetupInitialLocalPlayer",
           false
         ],
         [
-          99,
+          95,
           "UpdateActiveSplitscreenType",
           false
         ],
         [
-          100,
+          96,
           "LayoutPlayers",
           false
         ],
         [
-          101,
+          97,
           "GetSubtitleRegion",
           false
         ],
         [
-          102,
+          98,
           "DrawTitleSafeArea",
           false
         ],
         [
-          103,
+          99,
           "PostRender",
           false
         ],
         [
-          104,
+          100,
           "DrawTransition",
           false
         ],
         [
-          105,
+          101,
           "DrawTransitionMessage",
           false
         ],
         [
-          106,
+          102,
           "NotifyPlayerAdded",
           false
         ],
         [
-          107,
+          103,
           "NotifyPlayerRemoved",
           false
         ],
         [
-          108,
+          104,
           "PeekTravelFailureMessages",
           false
         ],
         [
-          109,
+          105,
           "PeekNetworkFailureMessages",
           false
         ],
         [
-          110,
+          106,
           "VerifyPathRenderingComponents",
           false
         ]
@@ -2131,117 +2111,117 @@
     },
     "AHUD": {
       "parent": "AActor",
-      "base_index": 203,
+      "base_index": 198,
       "own_count": 22,
-      "total_slots": 225,
+      "total_slots": 220,
       "functions": [
         [
-          203,
+          198,
           "ShowHUD",
           false
         ],
         [
-          204,
+          199,
           "ShowDebug",
           false
         ],
         [
-          205,
+          200,
           "NotifyHitBoxClick",
           false
         ],
         [
-          206,
+          201,
           "NotifyHitBoxRelease",
           false
         ],
         [
-          207,
+          202,
           "NotifyHitBoxBeginCursorOver",
           false
         ],
         [
-          208,
+          203,
           "NotifyHitBoxEndCursorOver",
           false
         ],
         [
-          209,
+          204,
           "DrawActorOverlays",
           false
         ],
         [
-          210,
+          205,
           "DrawSafeZoneOverlay",
           false
         ],
         [
-          211,
+          206,
           "NotifyBindPostProcessEffects",
           false
         ],
         [
-          212,
+          207,
           "RemovePostRenderedActor",
           false
         ],
         [
-          213,
+          208,
           "AddPostRenderedActor",
           false
         ],
         [
-          214,
+          209,
           "ShouldDisplayDebug",
           false
         ],
         [
-          215,
+          210,
           "ShowDebugInfo",
           false
         ],
         [
-          216,
+          211,
           "GetCurrentDebugTargetActor",
           false
         ],
         [
-          217,
+          212,
           "GetDebugActorList",
           false
         ],
         [
-          218,
+          213,
           "NextDebugTarget",
           false
         ],
         [
-          219,
+          214,
           "PreviousDebugTarget",
           false
         ],
         [
-          220,
+          215,
           "PostRender",
           false
         ],
         [
-          221,
+          216,
           "DrawHUD",
           false
         ],
         [
-          222,
+          217,
           "GetFontFromSizeIndex",
           false
         ],
         [
-          223,
+          218,
           "OnLostFocusPause",
           false
         ],
         [
-          224,
+          219,
           "HandleBugScreenShot",
           false
         ]
@@ -2249,427 +2229,422 @@
     },
     "UEngine": {
       "parent": "UObject",
-      "base_index": 80,
-      "own_count": 84,
-      "total_slots": 164,
+      "base_index": 77,
+      "own_count": 83,
+      "total_slots": 160,
       "functions": [
         [
-          80,
+          77,
           "WorldAdded",
           false
         ],
         [
-          81,
+          78,
           "WorldDestroyed",
           false
         ],
         [
-          82,
+          79,
           "IsInitialized",
           false
         ],
         [
-          83,
+          80,
           "GetDefaultWorldFeatureLevel",
           false
         ],
         [
-          84,
+          81,
           "Init",
           false
         ],
         [
-          85,
+          82,
           "Start",
           false
         ],
         [
-          86,
+          83,
           "PreExit",
           false
         ],
         [
-          87,
+          84,
           "ReleaseAudioDeviceManager",
           false
         ],
         [
-          88,
+          85,
           "Tick",
           false
         ],
         [
-          89,
+          86,
           "CorrectNegativeTimeDelta",
           false
         ],
         [
-          90,
+          87,
           "GetMaxTickRate",
           false
         ],
         [
-          91,
+          88,
           "GetMaxFPS",
           false
         ],
         [
-          92,
+          89,
           "SetMaxFPS",
           false
         ],
         [
-          93,
+          90,
           "UpdateRunningAverageDeltaTime",
           false
         ],
         [
-          94,
+          91,
           "IsAllowedFramerateSmoothing",
           false
         ],
         [
-          95,
+          92,
           "OnLostFocusPause",
           false
         ],
         [
-          96,
+          93,
           "ShouldThrottleCPUUsage",
           false
         ],
         [
-          97,
+          94,
           "ShouldDrawBrushWireframe",
           false
         ],
         [
-          98,
+          95,
           "GetMapBuildCancelled",
           false
         ],
         [
-          99,
+          96,
           "SetMapBuildCancelled",
           false
         ],
         [
-          100,
+          97,
           "GetPropertyColorationColor",
           false
         ],
         [
-          101,
+          98,
           "AllowSelectTranslucent",
           false
         ],
         [
-          102,
+          99,
           "OnlyLoadEditorVisibleLevelsInPIE",
           false
         ],
         [
-          103,
+          100,
           "PreferToStreamLevelsInPIE",
           false
         ],
         [
-          104,
+          101,
           "GetSpriteCategoryIndex",
           false
         ],
         [
-          105,
+          102,
           "StartFPSChart",
           false
         ],
         [
-          106,
+          103,
           "StopFPSChart",
           false
         ],
         [
-          107,
+          104,
           "ProcessToggleFreezeCommand",
           false
         ],
         [
-          108,
+          105,
           "ProcessToggleFreezeStreamingCommand",
           false
         ],
         [
-          109,
+          106,
           "IsSplitScreen",
           false
         ],
         [
-          110,
+          107,
           "IsSettingUpPlayWorld",
           false
         ],
         [
-          111,
+          108,
           "GetGameViewportWidget",
           false
         ],
         [
-          112,
+          109,
           "FocusNextPIEWorld",
           false
         ],
         [
-          113,
+          110,
           "ResetPIEAudioSetting",
           false
         ],
         [
-          114,
+          111,
           "GetNextPIEViewport",
           false
         ],
         [
-          115,
+          112,
           "RemapGamepadControllerIdForPIE",
           false
         ],
         [
-          116,
+          113,
           "NotifyToolsOfObjectReplacement",
           false
         ],
         [
-          117,
+          114,
           "UseSound",
           false
         ],
         [
-          118,
+          115,
           "CreatePIEWorldByDuplication",
           false
         ],
         [
-          119,
+          116,
           "Experimental_ShouldPreDuplicateMap",
           false
         ],
         [
-          120,
+          117,
           "InitializeAudioDeviceManager",
           false
         ],
         [
-          121,
+          118,
           "InitializeHMDDevice",
           false
         ],
         [
-          122,
+          119,
           "InitializeEyeTrackingDevice",
           false
         ],
         [
-          123,
+          120,
           "RecordHMDAnalytics",
           false
         ],
         [
-          124,
+          121,
           "InitializeObjectReferences",
           false
         ],
         [
-          125,
+          122,
           "InitializePortalServices",
           false
         ],
         [
-          126,
+          123,
           "InitializeRunningAverageDeltaTime",
           false
         ],
         [
-          127,
+          124,
           "SpawnServerActors",
           false
         ],
         [
-          128,
+          125,
           "HandleNetworkFailure",
           false
         ],
         [
-          129,
+          126,
           "HandleTravelFailure",
           false
         ],
         [
-          130,
+          127,
           "HandleNetworkLagStateChanged",
           false
         ],
         [
+          128,
+          "NetworkRemapPath",
+          false
+        ],
+        [
+          129,
+          "NetworkRemapPath",
+          false
+        ],
+        [
+          130,
+          "NetworkRemapPath",
+          false
+        ],
+        [
           131,
-          "GetNetMode",
-          false
-        ],
-        [
-          132,
-          "NetworkRemapPath",
-          false
-        ],
-        [
-          133,
-          "NetworkRemapPath",
-          false
-        ],
-        [
-          134,
-          "NetworkRemapPath",
-          false
-        ],
-        [
-          135,
           "HandleOpenCommand",
           false
         ],
         [
-          136,
+          132,
           "HandleTravelCommand",
           false
         ],
         [
-          137,
+          133,
           "HandleStreamMapCommand",
           false
         ],
         [
-          138,
+          134,
           "HandleServerTravelCommand",
           false
         ],
         [
-          139,
+          135,
           "HandleSayCommand",
           false
         ],
         [
-          140,
+          136,
           "HandleDisconnectCommand",
           false
         ],
         [
-          141,
+          137,
           "HandleReconnectCommand",
           false
         ],
         [
-          142,
+          138,
           "Browse",
           false
         ],
         [
-          143,
+          139,
           "TickWorldTravel",
           false
         ],
         [
-          144,
+          140,
           "LoadMap",
           false
         ],
         [
-          145,
+          141,
           "RedrawViewports",
           false
         ],
         [
-          146,
+          142,
           "TriggerStreamingDataRebuild",
           false
         ],
         [
-          147,
+          143,
           "LoadMapRedrawViewports",
           false
         ],
         [
-          148,
+          144,
           "CancelAllPending",
           false
         ],
         [
-          149,
+          145,
           "CancelPending",
           false
         ],
         [
-          150,
+          146,
           "WorldIsPIEInNewViewport",
           false
         ],
         [
-          151,
+          147,
           "VerifyLoadMapWorldCleanup",
           false
         ],
         [
-          152,
+          148,
           "DestroyWorldContext",
           false
         ],
         [
-          153,
+          149,
           "AreEditorAnalyticsEnabled",
           false
         ],
         [
-          154,
+          150,
           "CreateStartupAnalyticsAttributes",
           false
         ],
         [
-          155,
+          151,
           "IsAutosaving",
           false
         ],
         [
-          156,
+          152,
           "ShouldDoAsyncEndOfFrameTasks",
           false
         ],
         [
-          157,
+          153,
           "CancelPending",
           false
         ],
         [
-          158,
+          154,
           "CancelPending",
           false
         ],
         [
-          159,
+          155,
           "MovePendingLevel",
           false
         ],
         [
-          160,
+          156,
           "ShouldShutdownWorldNetDriver",
           false
         ],
         [
-          161,
+          157,
           "HandleBrowseToDefaultMapFailure",
           false
         ],
         [
-          162,
+          158,
           "HandleNetworkFailure_NotifyGameInstance",
           false
         ],
         [
-          163,
+          159,
           "HandleTravelFailure_NotifyGameInstance",
           false
         ]
@@ -2677,34 +2652,34 @@
     },
     "UGameEngine": {
       "parent": "UEngine",
-      "base_index": 164,
+      "base_index": 160,
       "own_count": 0,
-      "total_slots": 164,
+      "total_slots": 160,
       "functions": []
     },
     "UWorld": {
       "parent": "UObject",
-      "base_index": 80,
+      "base_index": 77,
       "own_count": 4,
-      "total_slots": 84,
+      "total_slots": 81,
       "functions": [
         [
-          80,
+          77,
           "GetLocalURL",
           false
         ],
         [
-          81,
+          78,
           "GetAddressURL",
           false
         ],
         [
-          82,
+          79,
           "ServerTravel",
           false
         ],
         [
-          83,
+          80,
           "UpdateConstraintActors",
           false
         ]
@@ -2712,192 +2687,192 @@
     },
     "UGameInstance": {
       "parent": "UObject",
-      "base_index": 80,
+      "base_index": 77,
       "own_count": 37,
-      "total_slots": 117,
+      "total_slots": 114,
       "functions": [
         [
-          80,
+          77,
           "HandleOpenCommand",
           false
         ],
         [
-          81,
+          78,
           "HandleDisconnectCommand",
           false
         ],
         [
-          82,
+          79,
           "HandleReconnectCommand",
           false
         ],
         [
-          83,
+          80,
           "HandleTravelCommand",
           false
         ],
         [
-          84,
+          81,
           "GetWorld",
           false
         ],
         [
-          85,
+          82,
           "Init",
           false
         ],
         [
-          86,
+          83,
           "Shutdown",
           false
         ],
         [
-          87,
+          84,
           "OnWorldChanged",
           false
         ],
         [
-          88,
+          85,
           "StartGameInstance",
           false
         ],
         [
-          89,
+          86,
           "JoinSession",
           false
         ],
         [
-          90,
+          87,
           "JoinSession",
           false
         ],
         [
-          91,
+          88,
           "LoadComplete",
           false
         ],
         [
-          92,
+          89,
           "DebugCreatePlayer",
           false
         ],
         [
-          93,
+          90,
           "DebugRemovePlayer",
           false
         ],
         [
-          94,
+          91,
           "CreateInitialPlayer",
           false
         ],
         [
-          95,
+          92,
           "AddLocalPlayer",
           false
         ],
         [
-          96,
+          93,
           "RemoveLocalPlayer",
           false
         ],
         [
-          97,
+          94,
           "HandleDemoPlaybackFailure",
           false
         ],
         [
-          98,
+          95,
           "OnSeamlessTravelDuringReplay",
           false
         ],
         [
-          99,
+          96,
           "StartRecordingReplay",
           false
         ],
         [
-          100,
+          97,
           "StopRecordingReplay",
           false
         ],
         [
-          101,
+          98,
           "PlayReplay",
           false
         ],
         [
-          102,
+          99,
           "AddUserToReplay",
           false
         ],
         [
-          103,
+          100,
           "HandleGameNetControlMessage",
           false
         ],
         [
-          104,
+          101,
           "ReceivedNetworkEncryptionToken",
           false
         ],
         [
-          105,
+          102,
           "ReceivedNetworkEncryptionAck",
           false
         ],
         [
-          106,
+          103,
           "PreloadContentForURL",
           false
         ],
         [
-          107,
+          104,
           "CreateGameModeForURL",
           false
         ],
         [
-          108,
+          105,
           "OverrideGameModeClass",
           false
         ],
         [
-          109,
+          106,
           "DelayPendingNetGameTravel",
           false
         ],
         [
-          110,
+          107,
           "GetOnlineSessionClass",
           false
         ],
         [
-          111,
+          108,
           "GetOnlinePlatformName",
           false
         ],
         [
-          112,
+          109,
           "ClientTravelToSession",
           false
         ],
         [
-          113,
+          110,
           "ReturnToMainMenu",
           false
         ],
         [
-          114,
+          111,
           "RegisterReferencedObject",
           false
         ],
         [
-          115,
+          112,
           "UnregisterReferencedObject",
           false
         ],
         [
-          116,
+          113,
           "OnStart",
           false
         ]
@@ -2905,142 +2880,137 @@
     },
     "APlayerState": {
       "parent": "AActor",
-      "base_index": 203,
-      "own_count": 27,
-      "total_slots": 231,
+      "base_index": 198,
+      "own_count": 26,
+      "total_slots": 224,
       "functions": [
         [
-          203,
+          198,
           "~APlayerState",
           true
         ],
         [
-          205,
-          "unknown",
-          false
-        ],
-        [
-          206,
+          199,
           "OnRep_Score",
           false
         ],
         [
-          207,
+          200,
           "OnRep_PlayerName",
           false
         ],
         [
-          208,
+          201,
           "OnRep_bIsInactive",
           false
         ],
         [
-          209,
+          202,
           "OnRep_PlayerId",
           false
         ],
         [
-          210,
+          203,
           "OnRep_UniqueId",
           false
         ],
         [
-          211,
+          204,
           "ClientInitialize",
           false
         ],
         [
-          212,
+          205,
           "UpdatePing",
           false
         ],
         [
-          213,
+          206,
           "RecalculateAvgPing",
           false
         ],
         [
-          214,
+          207,
           "ShouldBroadCastWelcomeMessage",
           false
         ],
         [
-          215,
+          208,
           "SetPlayerName",
           false
         ],
         [
-          216,
+          209,
           "SetPlayerNameInternal",
           false
         ],
         [
-          217,
+          210,
           "GetPlayerNameCustom",
           false
         ],
         [
-          218,
+          211,
           "GetOldPlayerName",
           false
         ],
         [
-          219,
+          212,
           "SetOldPlayerName",
           false
         ],
         [
-          220,
+          213,
           "SetUniqueId",
           false
         ],
         [
-          221,
+          214,
           "RegisterPlayerWithSession",
           false
         ],
         [
-          222,
+          215,
           "UnregisterPlayerWithSession",
           false
         ],
         [
-          223,
+          216,
           "Duplicate",
           false
         ],
         [
-          224,
+          217,
           "OnDeactivated",
           false
         ],
         [
-          225,
+          218,
           "OnReactivated",
           false
         ],
         [
-          226,
+          219,
           "SeamlessTravelTo",
           false
         ],
         [
-          227,
+          220,
           "IsPrimaryPlayer",
           false
         ],
         [
-          228,
+          221,
           "OverrideWith",
           false
         ],
         [
-          229,
+          222,
           "CopyProperties",
           false
         ],
         [
-          230,
+          223,
           "HandleWelcomeMessage",
           false
         ]
@@ -3048,102 +3018,102 @@
     },
     "AGameStateBase": {
       "parent": "AActor",
-      "base_index": 203,
+      "base_index": 198,
       "own_count": 19,
-      "total_slots": 222,
+      "total_slots": 217,
       "functions": [
         [
-          203,
+          198,
           "AsyncPackageLoaded",
           false
         ],
         [
-          204,
+          199,
           "GetServerWorldTimeSeconds",
           false
         ],
         [
-          205,
+          200,
           "HasBegunPlay",
           false
         ],
         [
-          206,
+          201,
           "HasMatchStarted",
           false
         ],
         [
-          207,
+          202,
           "HasMatchEnded",
           false
         ],
         [
-          208,
+          203,
           "GetPlayerStartTime",
           false
         ],
         [
-          209,
+          204,
           "GetPlayerRespawnDelay",
           false
         ],
         [
-          210,
+          205,
           "GetLifetimeReplicatedProps",
           false
         ],
         [
-          211,
+          206,
           "ReceivedGameModeClass",
           false
         ],
         [
-          212,
+          207,
           "ReceivedSpectatorClass",
           false
         ],
         [
-          213,
+          208,
           "SeamlessTravelTransitionCheckpoint",
           false
         ],
         [
-          214,
+          209,
           "AddPlayerState",
           false
         ],
         [
-          215,
+          210,
           "RemovePlayerState",
           false
         ],
         [
-          216,
+          211,
           "HandleBeginPlay",
           false
         ],
         [
-          217,
+          212,
           "OnRep_GameModeClass",
           false
         ],
         [
-          218,
+          213,
           "OnRep_SpectatorClass",
           false
         ],
         [
-          219,
+          214,
           "OnRep_ReplicatedHasBegunPlay",
           false
         ],
         [
-          220,
+          215,
           "UpdateServerTimeSeconds",
           false
         ],
         [
-          221,
+          216,
           "OnRep_ReplicatedWorldTimeSeconds",
           false
         ]
@@ -3151,247 +3121,247 @@
     },
     "AGameModeBase": {
       "parent": "AActor",
-      "base_index": 203,
+      "base_index": 198,
       "own_count": 48,
-      "total_slots": 251,
+      "total_slots": 246,
       "functions": [
         [
-          203,
+          198,
           "InitGame",
           false
         ],
         [
-          204,
+          199,
           "InitGameState",
           false
         ],
         [
-          205,
+          200,
           "GetGameSessionClass",
           false
         ],
         [
-          206,
+          201,
           "GetNumPlayers",
           false
         ],
         [
-          207,
+          202,
           "GetNumSpectators",
           false
         ],
         [
-          208,
+          203,
           "StartPlay",
           false
         ],
         [
-          209,
+          204,
           "HasMatchStarted",
           false
         ],
         [
-          210,
+          205,
           "HasMatchEnded",
           false
         ],
         [
-          211,
+          206,
           "SetPause",
           false
         ],
         [
-          212,
+          207,
           "ClearPause",
           false
         ],
         [
-          213,
+          208,
           "AllowPausing",
           false
         ],
         [
-          214,
+          209,
           "IsPaused",
           false
         ],
         [
-          215,
+          210,
           "ResetLevel",
           false
         ],
         [
-          216,
+          211,
           "ReturnToMainMenuHost",
           false
         ],
         [
-          217,
+          212,
           "CanServerTravel",
           false
         ],
         [
-          218,
+          213,
           "ProcessServerTravel",
           false
         ],
         [
-          219,
+          214,
           "GetSeamlessTravelActorList",
           false
         ],
         [
-          220,
+          215,
           "SwapPlayerControllers",
           false
         ],
         [
-          221,
+          216,
           "GetPlayerControllerClassToSpawnForSeamlessTravel",
           false
         ],
         [
-          222,
+          217,
           "HandleSeamlessTravelPlayer",
           false
         ],
         [
-          223,
+          218,
           "PostSeamlessTravel",
           false
         ],
         [
-          224,
+          219,
           "StartToLeaveMap",
           false
         ],
         [
-          225,
+          220,
           "GameWelcomePlayer",
           false
         ],
         [
-          226,
+          221,
           "PreLogin",
           false
         ],
         [
-          227,
+          222,
           "Login",
           false
         ],
         [
-          228,
+          223,
           "PostLogin",
           false
         ],
         [
-          229,
+          224,
           "Logout",
           false
         ],
         [
-          230,
+          225,
           "SpawnPlayerController",
           false
         ],
         [
-          231,
+          226,
           "SpawnPlayerController",
           false
         ],
         [
-          232,
+          227,
           "SpawnReplayPlayerController",
           false
         ],
         [
-          233,
+          228,
           "ChangeName",
           false
         ],
         [
-          234,
+          229,
           "RestartPlayer",
           false
         ],
         [
-          235,
+          230,
           "RestartPlayerAtPlayerStart",
           false
         ],
         [
-          236,
+          231,
           "RestartPlayerAtTransform",
           false
         ],
         [
-          237,
+          232,
           "SetPlayerDefaults",
           false
         ],
         [
-          238,
+          233,
           "AllowCheats",
           false
         ],
         [
-          239,
+          234,
           "IsHandlingReplays",
           false
         ],
         [
-          240,
+          235,
           "SpawnPlayerFromSimulate",
           false
         ],
         [
-          241,
+          236,
           "ShouldStartInCinematicMode",
           false
         ],
         [
-          242,
+          237,
           "UpdateGameplayMuteList",
           false
         ],
         [
-          243,
+          238,
           "InitNewPlayer",
           false
         ],
         [
-          244,
+          239,
           "GenericPlayerInitialization",
           false
         ],
         [
-          245,
+          240,
           "ReplicateStreamingStatus",
           false
         ],
         [
-          246,
+          241,
           "ShouldSpawnAtStartSpot",
           false
         ],
         [
-          247,
+          242,
           "FinishRestartPlayer",
           false
         ],
         [
-          248,
+          243,
           "ProcessClientTravel",
           false
         ],
         [
-          249,
+          244,
           "InitSeamlessTravelPlayer",
           false
         ],
         [
-          250,
+          245,
           "SpawnPlayerControllerCommon",
           false
         ]

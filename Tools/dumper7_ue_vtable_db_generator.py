@@ -144,6 +144,38 @@ _RE_FUNC_NAME = re.compile(
     r"virtual\s+(?:[\w:*&<>,\s]+?)\s+(\w+)\s*\("
 )
 
+# In UE4/UE5 shipping builds on MSVC x64, destructor occupies one vtable slot.
+DESTRUCTOR_SLOT_COUNT = 1
+
+
+def _strip_comments(line: str, in_block_comment: bool) -> Tuple[str, bool]:
+    """Remove // and /* */ comments from a source line while preserving code."""
+    out: List[str] = []
+    i = 0
+    n = len(line)
+
+    while i < n:
+        if in_block_comment:
+            end = line.find("*/", i)
+            if end == -1:
+                return "".join(out), True
+            i = end + 2
+            in_block_comment = False
+            continue
+
+        two = line[i:i + 2]
+        if two == "/*":
+            in_block_comment = True
+            i += 2
+            continue
+        if two == "//":
+            break
+
+        out.append(line[i])
+        i += 1
+
+    return "".join(out), in_block_comment
+
 
 def _extract_func_name(decl: str) -> Tuple[str, bool]:
     """Extract function name and whether it's a destructor from a virtual declaration."""
@@ -201,9 +233,14 @@ def parse_header(filepath: str, class_name: str) -> List[VirtualFunction]:
     # Accumulator for multi-line declarations
     accum = ""
     accum_start_line = 0
+    in_block_comment = False
 
     for line_no, raw_line in enumerate(lines, start=1):
-        line = raw_line.strip()
+        code_line, in_block_comment = _strip_comments(raw_line, in_block_comment)
+        line = code_line.strip()
+
+        if not line:
+            continue
 
         # --- Preprocessor tracking ---
         if line.startswith("#"):
@@ -233,10 +270,10 @@ def parse_header(filepath: str, class_name: str) -> List[VirtualFunction]:
 
         # --- Class scope tracking ---
         if not in_class:
-            if class_pattern.search(raw_line):
+            if class_pattern.search(code_line):
                 in_class = True
                 # Find the opening brace on this or subsequent lines
-                brace_depth = raw_line.count("{") - raw_line.count("}")
+                brace_depth = code_line.count("{") - code_line.count("}")
                 class_brace_depth = 1
                 if brace_depth <= 0:
                     # Opening brace might be on the next line
@@ -245,8 +282,8 @@ def parse_header(filepath: str, class_name: str) -> List[VirtualFunction]:
             continue
 
         # Track braces to know when we leave the class
-        opens = raw_line.count("{")
-        closes = raw_line.count("}")
+        opens = code_line.count("{")
+        closes = code_line.count("}")
         brace_depth += opens - closes
 
         if class_brace_depth == 0 and opens > 0:
@@ -323,11 +360,11 @@ def _assign_base_indices(class_map: Dict[str, ClassVTable]) -> None:
 
         vtable.base_index = parent_total
 
-        # Count slots: destructors occupy 2 on MSVC x64
+        # Count slots: destructor occupies one slot.
         own_slots = 0
         for func in vtable.own_functions:
             if func.is_destructor:
-                own_slots += 2
+                own_slots += DESTRUCTOR_SLOT_COUNT
             else:
                 own_slots += 1
 
@@ -350,7 +387,7 @@ def _format_output(class_map: Dict[str, ClassVTable], version: str) -> dict:
         for func in vtable.own_functions:
             functions.append([idx, func.name, func.is_destructor])
             if func.is_destructor:
-                idx += 2  # MSVC x64: scalar + vector deleting destructor
+                idx += DESTRUCTOR_SLOT_COUNT
             else:
                 idx += 1
 

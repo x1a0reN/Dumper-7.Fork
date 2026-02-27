@@ -994,11 +994,9 @@ static void WritePropertyValueAsJson(std::ofstream& Out, UEProperty Prop, const 
 		else if (TypeFlags & EClassCastFlags::StrProperty)
 		{
 			const auto* Str = reinterpret_cast<const FString*>(Data);
-			if (Str->IsValid() && Str->Num() > 0)
+			if (Str && Str->IsValid() && Str->Num() > 0)
 			{
-				std::wstring Wide(Str->CStr(), Str->Num() - 1);
-				std::string Narrow(Wide.begin(), Wide.end());
-				Out << "\"" << EscapeJsonString(Narrow) << "\"";
+				Out << "\"" << EscapeJsonString(Str->ToString()) << "\"";
 			}
 			else
 			{
@@ -1060,7 +1058,31 @@ static void WritePropertyValueAsJson(std::ofstream& Out, UEProperty Prop, const 
 		}
 		else if (TypeFlags & EClassCastFlags::TextProperty)
 		{
-			Out << "\"<FText>\"";
+			bool bWroteText = false;
+
+			const int32 TextDataOffset = Off::InSDK::Text::TextDatOffset;
+			const int32 InTextDataStringOffset = Off::InSDK::Text::InTextDataStringOffset;
+			const int32 FTextSize = Off::InSDK::Text::TextSize;
+
+			if (FTextSize > 0 && TextDataOffset >= 0 && (TextDataOffset + static_cast<int32>(sizeof(void*))) <= FTextSize)
+			{
+				const void* TextDataPtr = *reinterpret_cast<void* const*>(Data + TextDataOffset);
+
+				if (TextDataPtr && !Platform::IsBadReadPtr(TextDataPtr))
+				{
+					const uint8* TextDataBytes = reinterpret_cast<const uint8*>(TextDataPtr);
+					const auto* TextSource = reinterpret_cast<const FString*>(TextDataBytes + InTextDataStringOffset);
+
+					if (!Platform::IsBadReadPtr(TextSource) && TextSource->IsValid())
+					{
+						Out << "\"" << EscapeJsonString(TextSource->ToString()) << "\"";
+						bWroteText = true;
+					}
+				}
+			}
+
+			if (!bWroteText)
+				Out << "\"<FText>\"";
 		}
 		else if (TypeFlags & EClassCastFlags::MapProperty)
 		{
