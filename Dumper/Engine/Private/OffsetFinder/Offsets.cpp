@@ -654,6 +654,9 @@ void Off::Init()
 	Off::UFunction::ExecFunction = OffsetFinder::FindFunctionNativeFuncOffset();
 	std::cerr << std::format("Off::UFunction::ExecFunction: 0x{:X}\n", Off::UFunction::ExecFunction) << std::endl;
 
+	Off::UFunction::Script = OffsetFinder::FindFunctionScriptOffset();
+	std::cerr << std::format("Off::UFunction::Script: 0x{:X}\n", Off::UFunction::Script) << std::endl;
+
 	Off::Property::ElementSize = OffsetFinder::FindElementSizeOffset();
 	std::cerr << std::format("Off::Property::ElementSize: 0x{:X}\n", Off::Property::ElementSize);
 

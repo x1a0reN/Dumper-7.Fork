@@ -832,6 +832,65 @@ int32_t OffsetFinder::FindFunctionNativeFuncOffset()
 	return 0x0;
 }
 
+int32_t OffsetFinder::FindFunctionScriptOffset()
+{
+	// Script is a TArray<uint8> after ExecFunction in UFunction.
+	// Strategy: find a known Blueprint function where Script.Num > 0,
+	// and a known Native function where Script.Num == 0.
+
+	// Find a Blueprint-only function (ReceiveBeginPlay is common in all UE games)
+	UEObject BPFunc = ObjectArray::FindObjectFast("ReceiveBeginPlay", EClassCastFlags::Function);
+
+	if (!BPFunc)
+		BPFunc = ObjectArray::FindObjectFast("ReceiveTick", EClassCastFlags::Function);
+
+	if (!BPFunc)
+	{
+		std::cerr << "Dumper-7 WARNING: Could not find Blueprint function for Script offset discovery." << std::endl;
+		return OffsetNotFound;
+	}
+
+	// Find a Native function for cross-validation (Script.Num should be 0)
+	UEObject NativeFunc = ObjectArray::FindObjectFast("WasInputKeyJustPressed", EClassCastFlags::Function);
+
+	const uintptr_t BPAddr = reinterpret_cast<uintptr_t>(BPFunc.GetAddress());
+	const uintptr_t NativeAddr = NativeFunc ? reinterpret_cast<uintptr_t>(NativeFunc.GetAddress()) : 0;
+
+	// Scan after ExecFunction for TArray<uint8> pattern
+	const int32 StartOffset = Off::UFunction::ExecFunction + static_cast<int32>(sizeof(void*));
+
+	for (int32 i = StartOffset; i < StartOffset + 0x40; i += sizeof(void*))
+	{
+		// Read potential TArray fields: { Data* (8), Num (4), Max (4) }
+		const uintptr_t PossibleData = *reinterpret_cast<uintptr_t*>(BPAddr + i);
+		const int32 PossibleNum = *reinterpret_cast<int32*>(BPAddr + i + sizeof(void*));
+		const int32 PossibleMax = *reinterpret_cast<int32*>(BPAddr + i + sizeof(void*) + sizeof(int32));
+
+		// Blueprint function should have non-empty script
+		if (PossibleNum <= 0 || PossibleNum > 0x19000)
+			continue;
+
+		if (PossibleMax < PossibleNum)
+			continue;
+
+		if (PossibleData == 0 || Platform::IsBadReadPtr(reinterpret_cast<void*>(PossibleData)))
+			continue;
+
+		// Cross-validate: native function should have empty script (Num == 0)
+		if (NativeAddr != 0)
+		{
+			const int32 NativeNum = *reinterpret_cast<int32*>(NativeAddr + i + sizeof(void*));
+			if (NativeNum != 0)
+				continue;
+		}
+
+		return i;
+	}
+
+	std::cerr << "Dumper-7 WARNING: Could not find UFunction::Script offset." << std::endl;
+	return OffsetNotFound;
+}
+
 /* UClass */
 int32_t OffsetFinder::FindCastFlagsOffset()
 {

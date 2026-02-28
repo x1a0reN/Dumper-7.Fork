@@ -805,6 +805,33 @@ void* UEFunction::GetExecFunction() const
 	return *reinterpret_cast<void**>(Object + Off::UFunction::ExecFunction);
 }
 
+int32 UEFunction::GetScriptSize() const
+{
+	if (Off::UFunction::Script <= 0)
+		return 0;
+
+	return *reinterpret_cast<int32*>(Object + Off::UFunction::Script + sizeof(void*));
+}
+
+bool UEFunction::HasScript() const
+{
+	return GetScriptSize() > 0;
+}
+
+std::vector<uint8_t> UEFunction::GetScript() const
+{
+	if (Off::UFunction::Script <= 0)
+		return {};
+
+	const uint8_t* DataPtr = *reinterpret_cast<uint8_t* const*>(Object + Off::UFunction::Script);
+	const int32 Num = *reinterpret_cast<int32*>(Object + Off::UFunction::Script + sizeof(void*));
+
+	if (!DataPtr || Num <= 0)
+		return {};
+
+	return std::vector<uint8_t>(DataPtr, DataPtr + Num);
+}
+
 UEProperty UEFunction::GetReturnProperty() const
 {
 	for (auto Prop : GetProperties())

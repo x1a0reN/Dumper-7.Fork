@@ -221,6 +221,10 @@ public:
 
 	void* GetExecFunction() const;
 
+	bool HasScript() const;
+	std::vector<uint8_t> GetScript() const;
+	int32 GetScriptSize() const;
+
 	UEProperty GetReturnProperty() const;
 
 	std::string StringifyFlags(const char* Seperator = ", ") const;

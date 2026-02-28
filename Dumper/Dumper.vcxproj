@@ -161,6 +161,7 @@
     <ClCompile Include="Engine\Private\OffsetFinder\Offsets.cpp" />
     <ClCompile Include="Engine\Private\Unreal\UnrealObjects.cpp" />
     <ClCompile Include="Engine\Private\Unreal\UnrealTypes.cpp" />
+    <ClCompile Include="Engine\Private\Blueprint\BlueprintDecompiler.cpp" />
     <ClCompile Include="Platform\Private\Arch_x86.cpp" />
     <ClCompile Include="Platform\Private\PlatformWindows.cpp" />
     <ClCompile Include="Settings.cpp" />
@@ -216,6 +217,8 @@
     <ClInclude Include="Engine\Public\Unreal\UnrealContainers.h" />
     <ClInclude Include="Engine\Public\Unreal\UnrealObjects.h" />
     <ClInclude Include="Engine\Public\Unreal\UnrealTypes.h" />
+    <ClInclude Include="Engine\Public\Blueprint\EExprToken.h" />
+    <ClInclude Include="Engine\Public\Blueprint\BlueprintDecompiler.h" />
     <ClInclude Include="Utils\Encoding\UtfN.hpp" />
     <ClInclude Include="Utils\Utils.h" />
     <ClInclude Include="Generator\Public\Wrappers\StructWrapper.h" />

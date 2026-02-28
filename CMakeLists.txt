@@ -39,6 +39,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/Dumper/Engine/Public
     ${CMAKE_SOURCE_DIR}/Dumper/Engine/Public/OffsetFinder
     ${CMAKE_SOURCE_DIR}/Dumper/Engine/Public/Unreal
+    ${CMAKE_SOURCE_DIR}/Dumper/Engine/Public/Blueprint
+
+    # Engine Private Blueprint
+    ${CMAKE_SOURCE_DIR}/Dumper/Engine/Private/Blueprint
 
     # Generator
     ${CMAKE_SOURCE_DIR}/Dumper/Generator

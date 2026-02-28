@@ -111,18 +111,89 @@ class ClassVTable:
 # Preprocessor state tracker — skip WITH_EDITOR blocks
 # ---------------------------------------------------------------------------
 
-EDITOR_MACROS = {"WITH_EDITOR", "WITH_EDITORONLY_DATA", "WITH_EDITOR_ONLY_DATA"}
+DEFAULT_MACROS: Dict[str, int] = {
+    "WITH_EDITOR": 0,
+    "WITH_EDITORONLY_DATA": 0,
+    "WITH_EDITOR_ONLY_DATA": 0,
+    "WITH_ENGINE": 1,
+    "UE_EDITOR": 0,
+    "UE_BUILD_SHIPPING": 1,
+    "UE_BUILD_TEST": 0,
+    "DO_CHECK": 0,
+    "ENABLE_DRAW_DEBUG": 0,
+}
 
 
-def _is_editor_ifdef(line: str) -> bool:
-    """Check if a preprocessor line opens a WITH_EDITOR block."""
-    stripped = line.strip()
-    for macro in EDITOR_MACROS:
-        if re.match(rf"#\s*if\s+(defined\s*\(\s*{macro}\s*\)|{macro}\b)", stripped):
-            return True
-        if re.match(rf"#\s*ifdef\s+{macro}\b", stripped):
-            return True
-    return False
+def _parse_macro_definitions(defs: Optional[List[str]]) -> Dict[str, int]:
+    """
+    Parse --define style macro overrides:
+      --define WITH_EDITOR=1
+      --define UE_BUILD_SHIPPING=0
+      --define SOME_FLAG      (treated as 1)
+    """
+    macros = dict(DEFAULT_MACROS)
+    if not defs:
+        return macros
+
+    for item in defs:
+        if not item:
+            continue
+
+        if "=" in item:
+            key, value = item.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            if not key:
+                continue
+            try:
+                macros[key] = int(value, 0)
+            except ValueError:
+                macros[key] = 1 if value else 0
+        else:
+            key = item.strip()
+            if key:
+                macros[key] = 1
+
+    return macros
+
+
+def _eval_pp_expr(expr: str, macros: Dict[str, int]) -> bool:
+    """
+    Evaluate a limited C preprocessor expression:
+    - supports defined(MACRO)
+    - identifiers become numeric macro values (unknown => 0)
+    - supports !, &&, ||
+    """
+    if not expr:
+        return False
+
+    s = expr
+    s = re.sub(
+        r"\bdefined\s*\(\s*([A-Za-z_]\w*)\s*\)",
+        lambda m: "1" if macros.get(m.group(1), 0) else "0",
+        s,
+    )
+    s = re.sub(
+        r"\bdefined\s+([A-Za-z_]\w*)",
+        lambda m: "1" if macros.get(m.group(1), 0) else "0",
+        s,
+    )
+
+    def _id_repl(match: re.Match[str]) -> str:
+        name = match.group(0)
+        return str(int(macros.get(name, 0)))
+
+    s = re.sub(r"\b[A-Za-z_]\w*\b", _id_repl, s)
+    s = s.replace("&&", " and ").replace("||", " or ")
+    s = re.sub(r"(?<![=!<>])!(?!=)", " not ", s)
+
+    if not re.fullmatch(r"[\s0-9xXa-fA-F\(\)\+\-\*/%<>=!&|.^~notandor]+", s):
+        return False
+
+    try:
+        return bool(eval(s, {"__builtins__": {}}, {}))
+    except Exception:
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -209,18 +280,26 @@ def _process_declaration(decl: str, line_no: int, results: List[VirtualFunction]
     results.append(VirtualFunction(name=name, is_destructor=is_dtor, line_number=line_no))
 
 
-def parse_header(filepath: str, class_name: str) -> List[VirtualFunction]:
+def parse_header(
+    filepath: str,
+    class_name: str,
+    macros: Optional[Dict[str, int]] = None,
+) -> List[VirtualFunction]:
     """Parse a C++ header and extract new (non-override) virtual function declarations."""
     if not os.path.isfile(filepath):
         print(f"  WARNING: File not found: {filepath}", file=sys.stderr)
         return []
 
+    if macros is None:
+        macros = DEFAULT_MACROS
+
     with open(filepath, "r", encoding="utf-8", errors="replace") as f:
         lines = f.readlines()
 
     results: List[VirtualFunction] = []
-    editor_depth = 0  # nesting depth inside WITH_EDITOR blocks
-    pp_depth_stack: List[bool] = []  # stack of (is_editor_block) for each #if level
+    # Stack frame: [parent_active, branch_taken, current_active]
+    pp_stack: List[List[bool]] = []
+    is_active = True
     in_class = False
     brace_depth = 0
     class_brace_depth = 0
@@ -244,28 +323,56 @@ def parse_header(filepath: str, class_name: str) -> List[VirtualFunction]:
 
         # --- Preprocessor tracking ---
         if line.startswith("#"):
-            if re.match(r"#\s*if", line):
-                is_editor = _is_editor_ifdef(line)
-                pp_depth_stack.append(is_editor)
-                if is_editor:
-                    editor_depth += 1
-            elif re.match(r"#\s*elif", line):
-                # Treat elif as closing the previous and opening a new block
-                pass
-            elif re.match(r"#\s*else", line):
-                # In a WITH_EDITOR block, #else means we're now in the non-editor path
-                if pp_depth_stack and pp_depth_stack[-1] and editor_depth > 0:
-                    editor_depth -= 1
-                    pp_depth_stack[-1] = False  # no longer an editor block
-            elif re.match(r"#\s*endif", line):
-                if pp_depth_stack:
-                    was_editor = pp_depth_stack.pop()
-                    if was_editor and editor_depth > 0:
-                        editor_depth -= 1
+            m = re.match(r"#\s*(\w+)(.*)", line)
+            if m:
+                directive = m.group(1)
+                rest = m.group(2).strip()
+
+                if directive == "if":
+                    parent_active = is_active
+                    cond = _eval_pp_expr(rest, macros) if parent_active else False
+                    current_active = parent_active and cond
+                    pp_stack.append([parent_active, cond, current_active])
+                    is_active = current_active
+                elif directive == "ifdef":
+                    parent_active = is_active
+                    name = rest.split()[0] if rest else ""
+                    cond = bool(macros.get(name, 0)) if parent_active else False
+                    current_active = parent_active and cond
+                    pp_stack.append([parent_active, cond, current_active])
+                    is_active = current_active
+                elif directive == "ifndef":
+                    parent_active = is_active
+                    name = rest.split()[0] if rest else ""
+                    cond = (not bool(macros.get(name, 0))) if parent_active else False
+                    current_active = parent_active and cond
+                    pp_stack.append([parent_active, cond, current_active])
+                    is_active = current_active
+                elif directive == "elif":
+                    if pp_stack:
+                        parent_active, branch_taken, _ = pp_stack[-1]
+                        if not parent_active or branch_taken:
+                            current_active = False
+                        else:
+                            cond = _eval_pp_expr(rest, macros)
+                            current_active = parent_active and cond
+                            branch_taken = cond
+                        pp_stack[-1] = [parent_active, branch_taken, current_active]
+                        is_active = current_active
+                elif directive == "else":
+                    if pp_stack:
+                        parent_active, branch_taken, _ = pp_stack[-1]
+                        current_active = parent_active and (not branch_taken)
+                        pp_stack[-1] = [parent_active, True, current_active]
+                        is_active = current_active
+                elif directive == "endif":
+                    if pp_stack:
+                        parent_active, _, _ = pp_stack.pop()
+                        is_active = parent_active
             continue
 
-        # Skip content inside WITH_EDITOR blocks
-        if editor_depth > 0:
+        # Skip content in inactive preprocessor branches
+        if not is_active:
             continue
 
         # --- Class scope tracking ---
@@ -316,15 +423,22 @@ def parse_header(filepath: str, class_name: str) -> List[VirtualFunction]:
 # VTable database builder
 # ---------------------------------------------------------------------------
 
-def build_vtable_db(ue_root: str, version: str) -> dict:
+def build_vtable_db(
+    ue_root: str,
+    version: str,
+    macros: Optional[Dict[str, int]] = None,
+) -> dict:
     """Build the complete vtable database for all configured classes."""
+    if macros is None:
+        macros = DEFAULT_MACROS
+
     class_map: Dict[str, ClassVTable] = {}
 
     for class_name, parent_name, header_rel in CLASS_DEFINITIONS:
         header_path = os.path.join(ue_root, header_rel.replace("/", os.sep))
         print(f"Parsing {class_name} from {header_rel}...")
 
-        own_funcs = parse_header(header_path, class_name)
+        own_funcs = parse_header(header_path, class_name, macros=macros)
 
         vtable = ClassVTable(
             class_name=class_name,
@@ -426,6 +540,13 @@ def main() -> None:
         "--output", default=None,
         help="Output JSON path (default: Tools/vtable_db/<version>.json)",
     )
+    parser.add_argument(
+        "--define",
+        action="append",
+        default=[],
+        metavar="MACRO=VALUE",
+        help="Override preprocessor macro values (repeatable). Example: --define WITH_EDITOR=1",
+    )
     args = parser.parse_args()
 
     ue_root = os.path.abspath(args.ue_source_root)
@@ -433,7 +554,8 @@ def main() -> None:
         print(f"ERROR: UE source root not found: {ue_root}", file=sys.stderr)
         sys.exit(1)
 
-    db = build_vtable_db(ue_root, args.version)
+    macros = _parse_macro_definitions(args.define)
+    db = build_vtable_db(ue_root, args.version, macros=macros)
 
     # Determine output path
     if args.output:

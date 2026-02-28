@@ -224,6 +224,7 @@ namespace Off
 	{
 		inline int32 FunctionFlags;
 		inline int32 ExecFunction;
+		inline int32 Script; // TArray<uint8> - Blueprint bytecode
 	}
 
 	namespace UClass

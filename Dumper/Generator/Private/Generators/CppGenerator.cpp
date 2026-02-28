@@ -5,6 +5,7 @@
 #include "Generators/CppGenerator.h"
 #include "Wrappers/MemberWrappers.h"
 #include "Managers/MemberManager.h"
+#include "Blueprint/BlueprintDecompiler.h"
 
 #include "../Settings.h"
 
@@ -312,6 +313,22 @@ std::string CppGenerator::GenerateSingleFunction(const FunctionWrapper& Func, co
 			if (!ModuleName.empty())
 				FunctionOffsetComment = std::format(" // {}+0x{:X}", ModuleName, ModuleOffset);
 		}
+
+		// Append Blueprint/Native flag tags
+		const EFunctionFlags FuncFlagsForComment = UnrealFunctionForComment.GetFunctionFlags();
+
+		if (FuncFlagsForComment & EFunctionFlags::Native)
+			FunctionOffsetComment += " [Native]";
+		if (FuncFlagsForComment & EFunctionFlags::BlueprintEvent)
+			FunctionOffsetComment += " [BlueprintEvent]";
+		if (FuncFlagsForComment & EFunctionFlags::BlueprintCallable)
+			FunctionOffsetComment += " [BlueprintCallable]";
+		if (FuncFlagsForComment & EFunctionFlags::BlueprintPure)
+			FunctionOffsetComment += " [BlueprintPure]";
+		if (FuncFlagsForComment & EFunctionFlags::Delegate)
+			FunctionOffsetComment += " [Delegate]";
+		if (FuncFlagsForComment & EFunctionFlags::MulticastDelegate)
+			FunctionOffsetComment += " [MulticastDelegate]";
 	}
 
 	const bool bHasInlineBody = Func.HasInlineBody();
@@ -2563,6 +2580,91 @@ void CppGenerator::Generate()
 
 		if (Package.HasFunctions())
 			WriteFileEnd(FunctionsFile, EFileType::Functions);
+	}
+
+	// ============================================================
+	// Blueprint Bytecode Decompilation Pass
+	// ============================================================
+	if (Off::UFunction::Script > 0)
+	{
+		namespace fs = std::filesystem;
+
+		fs::path BlueprintFolder = MainFolder / "BlueprintBytecode";
+		std::error_code ec;
+		fs::create_directories(BlueprintFolder, ec);
+
+		if (ec)
+		{
+			std::cerr << "Error creating BlueprintBytecode folder: " << ec.message() << std::endl;
+		}
+		else
+		{
+			std::cerr << "Generating Blueprint bytecode decompilation..." << std::endl;
+
+			int TotalDecompiled = 0;
+
+			for (PackageInfoHandle BPPackage : PackageManager::IterateOverPackageInfos())
+			{
+				if (BPPackage.IsEmpty() || !BPPackage.HasFunctions())
+					continue;
+
+				const std::string BPFileName = Settings::CppGenerator::FilePrefix + BPPackage.GetName();
+				const std::u8string U8BPFileName = reinterpret_cast<const std::u8string&>(BPFileName);
+
+				StreamType BPFile;
+				bool bFileOpened = false;
+
+				auto DecompileStructFunctions = [&](int32 Index)
+				{
+					UEStruct Struct = ObjectArray::GetByIndex<UEStruct>(Index);
+					std::string StructName = Struct.GetCppName();
+
+					for (UEFunction Func : Struct.GetFunctions())
+					{
+						if (Func.HasFlags(EFunctionFlags::Native))
+							continue;
+
+						if (!Func.HasScript())
+							continue;
+
+						// Lazy-open file on first blueprint function
+						if (!bFileOpened)
+						{
+							BPFile = StreamType(BlueprintFolder / (U8BPFileName + u8"_blueprint.txt"));
+							if (!BPFile.is_open())
+							{
+								std::cerr << "Error opening blueprint file for " << BPFileName << std::endl;
+								return;
+							}
+							BPFile << "// Blueprint Bytecode Decompilation\n";
+							BPFile << "// Package: " << BPPackage.GetName() << "\n\n";
+							bFileOpened = true;
+						}
+
+						auto Result = BlueprintDecompiler::Decompile(Func);
+
+						BPFile << "=== " << StructName << "::" << Result.FunctionName << " ===\n";
+						BPFile << "// Flags: " << Result.FlagsString << "\n";
+						BPFile << "// Script Size: " << Result.ScriptSize << " bytes\n\n";
+						BPFile << Result.Pseudocode << "\n";
+
+						TotalDecompiled++;
+					}
+				};
+
+				if (BPPackage.HasClasses())
+					BPPackage.GetSortedClasses().VisitAllNodesWithCallback(DecompileStructFunctions);
+
+				if (BPPackage.HasStructs())
+					BPPackage.GetSortedStructs().VisitAllNodesWithCallback(DecompileStructFunctions);
+			}
+
+			std::cerr << std::format("Blueprint decompilation complete: {} functions decompiled.\n", TotalDecompiled);
+		}
+	}
+	else
+	{
+		std::cerr << "Skipping Blueprint decompilation: UFunction::Script offset not found." << std::endl;
 	}
 
 	if constexpr (Settings::Debug::bGenerateAssertionFile)

@@ -112,6 +112,7 @@ namespace OffsetFinder
 	/* UFunction */
 	int32_t FindFunctionFlagsOffset();
 	int32_t FindFunctionNativeFuncOffset();
+	int32_t FindFunctionScriptOffset();
 
 	/* UClass */
 	int32_t FindCastFlagsOffset();
